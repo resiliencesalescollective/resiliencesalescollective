@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSC CRM — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="crm.css" />
+</head>
+<body>
+
+  <nav class="crm-nav">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <span class="logo">Resilience Sales Collective</span>
+      <span class="nav-tag">CRM</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" id="navUser"></span>
+      <a href="pitch-decks.html" id="pitchDeckLink" style="display:none;font-size:0.55rem;font-weight:600;letter-spacing:0.3em;text-transform:uppercase;color:var(--walnut);border:1px solid rgba(153,134,108,0.3);border-radius:4px;padding:0.35rem 0.8rem;text-decoration:none;transition:color 0.15s,border-color 0.15s;" onmouseover="this.style.color='var(--cream)';this.style.borderColor='var(--walnut)'" onmouseout="this.style.color='var(--walnut)';this.style.borderColor='rgba(153,134,108,0.3)'">Pitch Deck Builder</a>
+      <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="crm-main">
+    <div id="pageLoading" class="loading">Loading…</div>
+
+    <!-- ── ADMIN VIEW ── -->
+    <div id="adminView" style="display:none;">
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num" id="sNew">—</div><div class="stat-label">New Leads</div></div>
+        <div class="stat-card"><div class="stat-num" id="sCont">—</div><div class="stat-label">Contacted</div></div>
+        <div class="stat-card"><div class="stat-num" id="sProp">—</div><div class="stat-label">Proposals</div></div>
+        <div class="stat-card"><div class="stat-num" id="sWon">—</div><div class="stat-label">Closed Won</div></div>
+        <div class="stat-card"><div class="stat-num" id="sLost">—</div><div class="stat-label">Closed Lost</div></div>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Pipeline</h2>
+        <button class="btn-primary btn-sm" onclick="openAdd()">+ Add Client</button>
+      </div>
+
+      <p class="pipeline-hint" style="display:none;font-size:0.6rem;color:var(--cream-55);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:0.8rem;">← Swipe to see all stages →</p>
+      <div class="pipeline-wrap">
+        <div class="pipeline">
+          <div class="pipeline-col">
+            <div class="pipeline-header new-lead">
+              <span class="pipeline-col-title">New Lead</span>
+              <span class="pipeline-count" id="cNew">0</span>
+            </div>
+            <div class="pipeline-cards" id="colNew"></div>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-header contacted">
+              <span class="pipeline-col-title">Contacted</span>
+              <span class="pipeline-count" id="cCont">0</span>
+            </div>
+            <div class="pipeline-cards" id="colCont"></div>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-header proposal">
+              <span class="pipeline-col-title">Proposal Pitched</span>
+              <span class="pipeline-count" id="cProp">0</span>
+            </div>
+            <div class="pipeline-cards" id="colProp"></div>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-header won">
+              <span class="pipeline-col-title">Closed Won</span>
+              <span class="pipeline-count" id="cWon">0</span>
+            </div>
+            <div class="pipeline-cards" id="colWon"></div>
+          </div>
+          <div class="pipeline-col">
+            <div class="pipeline-header lost">
+              <span class="pipeline-col-title">Closed Lost</span>
+              <span class="pipeline-count" id="cLost">0</span>
+            </div>
+            <div class="pipeline-cards" id="colLost"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:3rem;">
+        <div class="section-header">
+          <h2 class="section-title">Your Closers</h2>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Assigned Clients</th>
+                <th>Total Calls</th>
+                <th>Deals Closed</th>
+                <th>Revenue Generated</th>
+                <th>Commission Rate</th>
+                <th>Est. Commission</th>
+              </tr>
+            </thead>
+            <tbody id="closersBody">
+              <tr><td colspan="7" class="loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── ANALYTICS ── -->
+      <div style="margin-top:4rem;">
+        <div class="section-header">
+          <h2 class="section-title">Analytics</h2>
+        </div>
+
+        <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:1px;">
+          <div class="stat-card"><div class="stat-num" id="aBookingRate">—</div><div class="stat-label">Lead-to-Call Rate</div></div>
+          <div class="stat-card"><div class="stat-num" id="aShowUpRate">—</div><div class="stat-label">Show Up Rate</div></div>
+          <div class="stat-card"><div class="stat-num" id="aCloseRate">—</div><div class="stat-label">Call-to-Close Rate</div></div>
+          <div class="stat-card"><div class="stat-num" id="aCycleLen">—</div><div class="stat-label">Avg Sales Cycle</div></div>
+        </div>
+        <div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:3rem;">
+          <div class="stat-card"><div class="stat-num" id="aTotalRev">—</div><div class="stat-label">Total Revenue</div></div>
+          <div class="stat-card"><div class="stat-num" id="aTotalCAC">—</div><div class="stat-label">Total Acq. Cost</div></div>
+          <div class="stat-card"><div class="stat-num" id="aNetRev">—</div><div class="stat-label">Net Revenue</div></div>
+          <div class="stat-card"><div class="stat-num" id="aRevPerLead">—</div><div class="stat-label">Revenue per Lead</div></div>
+        </div>
+
+        <div class="section-header" style="margin-top:2rem;">
+          <h2 class="section-title" style="font-size:1.2rem;">Revenue by Lead Source</h2>
+        </div>
+        <div class="table-wrap" style="margin-bottom:3rem;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Lead Source</th><th>Leads</th><th>Revenue</th><th>Avg Acq. Cost</th></tr>
+            </thead>
+            <tbody id="leadSourceBody">
+              <tr><td colspan="4" class="loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CLOSER VIEW ── -->
+    <div id="closerView" style="display:none;">
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card"><div class="stat-num" id="myClients">—</div><div class="stat-label">My Clients</div></div>
+        <div class="stat-card"><div class="stat-num" id="myDeals">—</div><div class="stat-label">Deals Closed</div></div>
+        <div class="stat-card"><div class="stat-num" id="myRevenue">—</div><div class="stat-label">Revenue</div></div>
+      </div>
+      <div class="section-header">
+        <h2 class="section-title">My Clients</h2>
+      </div>
+      <div id="myClientsList"></div>
+    </div>
+  </main>
+
+  <!-- ── ADD CLIENT MODAL ── -->
+  <div class="modal-overlay" id="addModal" style="display:none;" onclick="if(event.target===this)closeAdd()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Client</h3>
+        <button class="modal-close" onclick="closeAdd()">×</button>
+      </div>
+      <form id="addForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" name="first_name" placeholder="First name" required />
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" name="last_name" placeholder="Last name" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Business Name</label>
+          <input type="text" name="business_name" placeholder="Business name" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="email@example.com" required />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" name="phone" placeholder="+1 (000) 000-0000" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Instagram Handle</label>
+          <input type="text" name="instagram" placeholder="@handle" />
+        </div>
+        <div class="form-group">
+          <label>Program / Offer Type</label>
+          <input type="text" name="program_type" placeholder="e.g. coaching, mastermind…" />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Leads Per Month</label>
+            <input type="text" name="leads_per_month" placeholder="e.g. 300+" />
+          </div>
+          <div class="form-group">
+            <label>Monthly Revenue</label>
+            <input type="text" name="monthly_revenue" placeholder="e.g. $10,000+" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Why RSC</label>
+          <textarea name="why_rsc" placeholder="Why they want to work with RSC…"></textarea>
+        </div>
+        <div id="addError" class="error-msg" style="display:none;"></div>
+        <button type="submit" class="btn-primary" style="width:100%;">Add Client</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CLOSER NOTES MODAL -->
+  <div class="modal-overlay" id="notesModal" style="display:none;" onclick="if(event.target===this)closeNotes()">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="notesModalTitle">Closer Notes</h3>
+        <button class="modal-close" onclick="closeNotes()">×</button>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea id="notesInput" rows="6" placeholder="Performance notes, feedback, reminders…"></textarea>
+      </div>
+      <div id="notesError" class="error-msg" style="display:none;"></div>
+      <button class="btn-primary" style="width:100%;" onclick="saveNotes()">Save Notes</button>
+    </div>
+  </div>
+
+  <!-- EDIT COMMISSION MODAL -->
+  <div class="modal-overlay" id="commissionModal" style="display:none;" onclick="if(event.target===this)closeEditCommission()">
+    <div class="modal" style="max-width:360px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Commission Rate</h3>
+        <button class="modal-close" onclick="closeEditCommission()">×</button>
+      </div>
+      <div class="form-group">
+        <label>Commission % (e.g. 10 for 10%)</label>
+        <input type="number" id="commissionInput" min="0" max="100" step="0.5" placeholder="10" />
+      </div>
+      <div id="commissionError" class="error-msg" style="display:none;"></div>
+      <button class="btn-primary" style="width:100%;" onclick="saveCommission()">Save</button>
+    </div>
+  </div>
+
+  <!-- EDIT CLOSER NAME MODAL -->
+  <div class="modal-overlay" id="editNameModal" style="display:none;" onclick="if(event.target===this)closeEditName()">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Edit Closer Name</h3>
+        <button class="modal-close" onclick="closeEditName()">×</button>
+      </div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="editNameInput" placeholder="e.g. Jane Smith" />
+      </div>
+      <div id="editNameError" class="error-msg" style="display:none;"></div>
+      <button class="btn-primary" style="width:100%;" onclick="saveCloserName()">Save Name</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    const COLS = {
+      'New Lead':        { col: 'colNew',  cnt: 'cNew',  stat: 'sNew',  cls: 'new-lead'  },
+      'Contacted':       { col: 'colCont', cnt: 'cCont', stat: 'sCont', cls: 'contacted' },
+      'Proposal Pitched':{ col: 'colProp', cnt: 'cProp', stat: 'sProp', cls: 'proposal'  },
+      'Closed Won':      { col: 'colWon',  cnt: 'cWon',  stat: 'sWon',  cls: 'won'       },
+      'Closed Lost':     { col: 'colLost', cnt: 'cLost', stat: 'sLost', cls: 'lost'      }
+    };
+
+    async function init() {
+      const auth = await requireAuth();
+      if (!auth) return;
+      document.getElementById('navUser').textContent = auth.profile.full_name;
+      document.getElementById('pageLoading').style.display = 'none';
+
+      if (auth.profile.role === 'admin') {
+        document.getElementById('pitchDeckLink').style.display = '';
+        document.getElementById('adminView').style.display = 'block';
+        await loadAdmin();
+      } else {
+        document.getElementById('closerView').style.display = 'block';
+        await loadCloser(auth.profile);
+      }
+    }
+
+    async function loadAdmin() {
+      const { data: clients } = await db.from('clients')
+        .select('*, closer:assigned_closer_id(full_name)')
+        .order('created_at', { ascending: false });
+
+      Object.values(COLS).forEach(c => { document.getElementById(c.col).innerHTML = ''; });
+
+      const counts = {};
+      Object.keys(COLS).forEach(k => counts[k] = 0);
+
+      (clients || []).forEach(c => {
+        const col = COLS[c.stage];
+        if (!col) return;
+        counts[c.stage]++;
+        const card = document.createElement('a');
+        card.href = `client.html?id=${c.id}`;
+        card.className = 'client-card';
+        card.draggable = true;
+        card.dataset.id = c.id;
+        card.innerHTML = `
+          <div class="client-card-name">${c.first_name} ${c.last_name}</div>
+          <div class="client-card-biz">${c.business_name}</div>
+          <div class="client-card-meta">${formatDate(c.created_at)}</div>
+          ${c.closer ? `<div class="closer-badge">${c.closer.full_name}</div>` : ''}
+        `;
+        card.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('clientId', c.id);
+          card.style.opacity = '0.4';
+        });
+        card.addEventListener('dragend', () => { card.style.opacity = '1'; });
+        document.getElementById(col.col).appendChild(card);
+      });
+
+      // Set up drop zones
+      Object.entries(COLS).forEach(([stage, col]) => {
+        const zone = document.getElementById(col.col);
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.parentElement.style.background = 'rgba(243,239,229,0.06)'; });
+        zone.addEventListener('dragleave', () => { zone.parentElement.style.background = ''; });
+        zone.addEventListener('drop', async e => {
+          e.preventDefault();
+          zone.parentElement.style.background = '';
+          const clientId = e.dataTransfer.getData('clientId');
+          if (!clientId) return;
+          await db.from('clients').update({ stage }).eq('id', clientId);
+          await loadAdmin();
+        });
+      });
+
+      Object.entries(counts).forEach(([stage, n]) => {
+        const col = COLS[stage];
+        document.getElementById(col.cnt).textContent = n;
+        document.getElementById(col.stat).textContent = n;
+      });
+
+      await loadClosersTable();
+      await loadAnalytics();
+    }
+
+    async function loadAnalytics() {
+      const [{ data: clients }, { data: logs }] = await Promise.all([
+        db.from('clients').select('stage,call_booked,showed_up,lead_source,acquisition_cost,created_at,closed_at'),
+        db.from('activity_logs').select('revenue,client_id')
+      ]);
+
+      const all       = clients || [];
+      const allLogs   = logs || [];
+      const booked    = all.filter(c => c.call_booked);
+      const showedUp  = all.filter(c => c.showed_up);
+      const won       = all.filter(c => c.stage === 'Closed Won' && c.closed_at);
+
+      const bookingRate = all.length ? Math.round(booked.length / all.length * 100) : 0;
+      const showUpRate  = booked.length ? Math.round(showedUp.length / booked.length * 100) : 0;
+      const closeRate   = booked.length ? Math.round(won.length / booked.length * 100) : 0;
+
+      const cycleDays = won.length ? Math.round(
+        won.reduce((s, c) => s + (new Date(c.closed_at) - new Date(c.created_at)) / 86400000, 0) / won.length
+      ) : 0;
+
+      const totalRev  = allLogs.reduce((s, l) => s + parseFloat(l.revenue || 0), 0);
+      const totalCAC  = all.reduce((s, c) => s + parseFloat(c.acquisition_cost || 0), 0);
+      const netRev    = totalRev - totalCAC;
+      const revPerLead = all.length ? totalRev / all.length : 0;
+
+      document.getElementById('aBookingRate').textContent = `${bookingRate}%`;
+      document.getElementById('aShowUpRate').textContent  = `${showUpRate}%`;
+      document.getElementById('aCloseRate').textContent   = `${closeRate}%`;
+      document.getElementById('aCycleLen').textContent    = cycleDays ? `${cycleDays}d` : '—';
+      document.getElementById('aTotalRev').textContent    = formatCurrency(totalRev);
+      document.getElementById('aTotalCAC').textContent    = formatCurrency(totalCAC);
+      document.getElementById('aNetRev').textContent      = formatCurrency(netRev);
+      document.getElementById('aRevPerLead').textContent  = formatCurrency(revPerLead);
+
+      // Revenue by lead source
+      const sourceMap = {};
+      all.forEach(c => {
+        const src = c.lead_source || 'Unknown';
+        if (!sourceMap[src]) sourceMap[src] = { count: 0, revenue: 0, cost: 0 };
+        sourceMap[src].count++;
+        sourceMap[src].cost += parseFloat(c.acquisition_cost || 0);
+        // Match revenue from logs
+        allLogs.filter(l => l.client_id === c.id).forEach(l => {
+          sourceMap[src].revenue += parseFloat(l.revenue || 0);
+        });
+      });
+
+      // Rebuild logs map for source matching — need client_id on clients
+      // Re-fetch clients with id for source mapping
+      const { data: clientsWithId } = await db.from('clients').select('id,lead_source,acquisition_cost');
+      const idToSource = {};
+      (clientsWithId || []).forEach(c => { idToSource[c.id] = { src: c.lead_source || 'Unknown', cost: parseFloat(c.acquisition_cost || 0) }; });
+      const srcRevMap = {};
+      allLogs.forEach(l => {
+        const info = idToSource[l.client_id];
+        if (!info) return;
+        if (!srcRevMap[info.src]) srcRevMap[info.src] = { revenue: 0 };
+        srcRevMap[info.src].revenue += parseFloat(l.revenue || 0);
+      });
+
+      const tbody = document.getElementById('leadSourceBody');
+      const sources = Object.entries(sourceMap).sort((a,b) => b[1].revenue - a[1].revenue);
+      if (!sources.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No lead source data yet. Add sources on each client\'s page.</td></tr>';
+      } else {
+        tbody.innerHTML = sources.map(([src, d]) => {
+          const rev = srcRevMap[src]?.revenue || 0;
+          const avgCost = d.count ? d.cost / d.count : 0;
+          return `<tr>
+            <td>${src}</td>
+            <td style="color:var(--cream-55)">${d.count}</td>
+            <td>${formatCurrency(rev)}</td>
+            <td>${formatCurrency(avgCost)}</td>
+          </tr>`;
+        }).join('');
+      }
+    }
+
+    async function loadClosersTable() {
+      const { data: closers } = await db.from('profiles')
+        .select('id, full_name, notes, commission_rate')
+        .eq('role', 'closer')
+        .order('full_name');
+
+      const tbody = document.getElementById('closersBody');
+
+      if (!closers || !closers.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No closers added yet.</td></tr>';
+        return;
+      }
+
+      const rows = await Promise.all(closers.map(async cl => {
+        const [{ data: assigned }, { data: logs }] = await Promise.all([
+          db.from('clients').select('id').eq('assigned_closer_id', cl.id),
+          db.from('activity_logs').select('calls_made,deals_closed,revenue').eq('closer_id', cl.id)
+        ]);
+        const calls   = (logs || []).reduce((s, l) => s + (l.calls_made   || 0), 0);
+        const deals   = (logs || []).reduce((s, l) => s + (l.deals_closed || 0), 0);
+        const revenue = (logs || []).reduce((s, l) => s + parseFloat(l.revenue || 0), 0);
+        const displayName = cl.full_name || '<span style="color:var(--cream-55);font-style:italic;">No name set</span>';
+        const safeNotes = (cl.notes || '').replace(/'/g, "\\'");
+        const safeName  = (cl.full_name || '').replace(/'/g, "\\'");
+        const commRate  = cl.commission_rate ?? 10;
+        const estComm   = formatCurrency(revenue * commRate / 100);
+        return `<tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:0.8rem;flex-wrap:wrap;">
+              <span onclick="openEditName('${cl.id}','${safeName}')" style="cursor:pointer;border-bottom:1px dashed var(--cream-20);padding-bottom:1px;" title="Click to edit name">${displayName}</span>
+            </div>
+            <div onclick="openNotes('${cl.id}','${safeName}','${safeNotes}')" style="font-size:0.75rem;color:var(--cream-55);margin-top:0.5rem;font-style:italic;cursor:pointer;border-bottom:1px dashed var(--cream-20);display:inline-block;padding-bottom:1px;" title="Click to edit notes">
+              ${cl.notes ? cl.notes : '<span style="opacity:0.4;">Add notes…</span>'}
+            </div>
+          </td>
+          <td>${(assigned || []).length}</td>
+          <td>${calls}</td>
+          <td>${deals}</td>
+          <td>${formatCurrency(revenue)}</td>
+          <td><span onclick="openEditCommission('${cl.id}','${commRate}')" style="cursor:pointer;border-bottom:1px dashed var(--cream-20);padding-bottom:1px;" title="Click to edit">${commRate}%</span></td>
+          <td>${estComm}</td>
+        </tr>`;
+      }));
+
+      tbody.innerHTML = rows.join('');
+    }
+
+    async function loadCloser(profile) {
+      const [{ data: clients }, { data: logs }] = await Promise.all([
+        db.from('clients').select('*').eq('assigned_closer_id', profile.id).order('created_at', { ascending: false }),
+        db.from('activity_logs').select('deals_closed,revenue').eq('closer_id', profile.id)
+      ]);
+
+      const deals   = (logs || []).reduce((s, l) => s + (l.deals_closed || 0), 0);
+      const revenue = (logs || []).reduce((s, l) => s + parseFloat(l.revenue || 0), 0);
+
+      document.getElementById('myClients').textContent = (clients || []).length;
+      document.getElementById('myDeals').textContent   = deals;
+      document.getElementById('myRevenue').textContent = formatCurrency(revenue);
+
+      const list = document.getElementById('myClientsList');
+      if (!clients || !clients.length) {
+        list.innerHTML = '<div class="empty-state">No clients assigned yet.</div>';
+        return;
+      }
+
+      list.innerHTML = `<div class="table-wrap"><table class="data-table">
+        <thead><tr><th>Client</th><th>Business</th><th>Stage</th><th>Added</th></tr></thead>
+        <tbody>${clients.map(c => `
+          <tr style="cursor:pointer;" onclick="window.location.href='client.html?id=${c.id}'">
+            <td>${c.first_name} ${c.last_name}</td>
+            <td style="color:var(--cream-55)">${c.business_name}</td>
+            <td><span class="stage-badge ${stageCls(c.stage)}">${c.stage}</span></td>
+            <td style="color:var(--cream-55);font-size:0.75rem;">${formatDate(c.created_at)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    }
+
+    let commissionCloserId = null;
+
+    function openEditCommission(id, rate) {
+      commissionCloserId = id;
+      document.getElementById('commissionInput').value = rate;
+      document.getElementById('commissionError').style.display = 'none';
+      document.getElementById('commissionModal').style.display = 'flex';
+      document.getElementById('commissionInput').focus();
+    }
+
+    function closeEditCommission() {
+      document.getElementById('commissionModal').style.display = 'none';
+      commissionCloserId = null;
+    }
+
+    async function saveCommission() {
+      const rate = parseFloat(document.getElementById('commissionInput').value);
+      const err  = document.getElementById('commissionError');
+      if (isNaN(rate) || rate < 0 || rate > 100) {
+        err.textContent = 'Please enter a valid percentage between 0 and 100.';
+        err.style.display = 'block'; return;
+      }
+      const { error } = await db.from('profiles').update({ commission_rate: rate }).eq('id', commissionCloserId);
+      if (error) { err.textContent = 'Failed to save.'; err.style.display = 'block'; return; }
+      closeEditCommission();
+      await loadClosersTable();
+    }
+
+    let editingCloserId = null;
+    let notesCloserId   = null;
+
+    function openNotes(id, name, currentNotes) {
+      notesCloserId = id;
+      document.getElementById('notesModalTitle').textContent = name ? `Notes — ${name}` : 'Closer Notes';
+      document.getElementById('notesInput').value = currentNotes;
+      document.getElementById('notesError').style.display = 'none';
+      document.getElementById('notesModal').style.display = 'flex';
+      document.getElementById('notesInput').focus();
+    }
+
+    function closeNotes() {
+      document.getElementById('notesModal').style.display = 'none';
+      notesCloserId = null;
+    }
+
+    async function saveNotes() {
+      const notes = document.getElementById('notesInput').value;
+      const err   = document.getElementById('notesError');
+      err.style.display = 'none';
+
+      const { error } = await db.from('profiles').update({ notes }).eq('id', notesCloserId);
+
+      if (error) {
+        err.textContent = 'Failed to save. Please try again.';
+        err.style.display = 'block';
+      } else {
+        closeNotes();
+        await loadClosersTable();
+      }
+    }
+
+    function openEditName(id, currentName) {
+      editingCloserId = id;
+      document.getElementById('editNameInput').value = currentName;
+      document.getElementById('editNameError').style.display = 'none';
+      document.getElementById('editNameModal').style.display = 'flex';
+      document.getElementById('editNameInput').focus();
+    }
+
+    function closeEditName() {
+      document.getElementById('editNameModal').style.display = 'none';
+      editingCloserId = null;
+    }
+
+    async function saveCloserName() {
+      const name = document.getElementById('editNameInput').value.trim();
+      const err  = document.getElementById('editNameError');
+      if (!name) { err.textContent = 'Please enter a name.'; err.style.display = 'block'; return; }
+
+      const { error } = await db.from('profiles').update({ full_name: name }).eq('id', editingCloserId);
+
+      if (error) {
+        err.textContent = 'Failed to save. Please try again.';
+        err.style.display = 'block';
+      } else {
+        closeEditName();
+        await loadClosersTable();
+      }
+    }
+
+    function openAdd()  { document.getElementById('addModal').style.display = 'flex'; }
+    function closeAdd() { document.getElementById('addModal').style.display = 'none'; document.getElementById('addForm').reset(); document.getElementById('addError').style.display = 'none'; }
+
+    document.getElementById('addForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      const err = document.getElementById('addError');
+      btn.textContent = 'Adding…'; btn.disabled = true; err.style.display = 'none';
+
+      const data = Object.fromEntries(new FormData(e.target).entries());
+      const { error } = await db.from('clients').insert([data]);
+
+      if (error) {
+        err.textContent = 'Failed to add client. Please try again.';
+        err.style.display = 'block';
+        btn.textContent = 'Add Client'; btn.disabled = false;
+      } else {
+        closeAdd();
+        await loadAdmin();
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

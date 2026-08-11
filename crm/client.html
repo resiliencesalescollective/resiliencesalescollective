@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSC CRM — Client</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="crm.css" />
+</head>
+<body>
+
+  <nav class="crm-nav">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <span class="logo">Resilience Sales Collective</span>
+      <span class="nav-tag">CRM</span>
+    </div>
+    <div class="nav-right">
+      <span class="nav-user" id="navUser"></span>
+      <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </div>
+  </nav>
+
+  <main class="crm-main">
+    <div id="pageLoading" class="loading">Loading…</div>
+
+    <div id="pageContent" style="display:none;">
+
+      <!-- HEADER -->
+      <div class="client-header">
+        <a href="dashboard.html" class="back-link">← Dashboard</a>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+          <div>
+            <h1 class="client-name" id="clientName"></h1>
+            <div class="client-biz" id="clientBiz"></div>
+            <span class="stage-badge" id="stageBadge"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- APPLICATION INFO -->
+      <div class="detail-section">
+        <div class="detail-section-header">Application Info</div>
+        <div class="detail-section-body" style="padding:0;">
+          <div class="info-grid" id="infoGrid"></div>
+        </div>
+      </div>
+
+      <!-- PIPELINE MANAGEMENT — admin only -->
+      <div class="detail-section" id="adminSection" style="display:none;">
+        <div class="detail-section-header">Pipeline Management</div>
+        <div class="detail-section-body">
+          <div class="form-row" style="margin-bottom:1.2rem;">
+            <div class="form-group">
+              <label>Stage</label>
+              <select id="stageSelect">
+                <option value="New Lead">New Lead</option>
+                <option value="Contacted">Contacted</option>
+                <option value="Proposal Pitched">Proposal Pitched</option>
+                <option value="Closed Won">Closed Won</option>
+                <option value="Closed Lost">Closed Lost</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Assigned Closer</label>
+              <select id="closerSelect">
+                <option value="">Unassigned</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom:1.2rem;">
+            <div class="form-group">
+              <label>Lead Source</label>
+              <input type="text" id="leadSource" placeholder="e.g. Instagram, Referral, Podcast…" />
+            </div>
+            <div class="form-group">
+              <label>Acquisition Cost ($)</label>
+              <input type="number" id="acquisitionCost" min="0" step="0.01" placeholder="0.00" />
+            </div>
+          </div>
+          <div style="display:flex;gap:2.5rem;margin-bottom:1.4rem;align-items:center;">
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.78rem;color:var(--cream-55);font-weight:400;letter-spacing:0.03em;">
+              <input type="checkbox" id="callBooked" style="accent-color:var(--walnut);width:16px;height:16px;" />
+              Call Booked
+            </label>
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.78rem;color:var(--cream-55);font-weight:400;letter-spacing:0.03em;">
+              <input type="checkbox" id="showedUp" style="accent-color:var(--walnut);width:16px;height:16px;" />
+              Showed Up
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Internal Notes</label>
+            <textarea id="notesField" placeholder="Notes visible to you and the assigned closer…"></textarea>
+          </div>
+          <div id="saveMsg" style="display:none;"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;">
+            <button class="btn-primary" onclick="saveChanges(this)">Save Changes</button>
+            <button class="btn-secondary" onclick="deleteClient()" style="color:var(--lost);border-color:rgba(154,106,106,0.4);">Delete Client</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTES — closer read-only -->
+      <div class="detail-section" id="closerNotesSection" style="display:none;">
+        <div class="detail-section-header">Notes from Kate</div>
+        <div class="detail-section-body">
+          <p id="notesReadOnly" style="font-size:0.88rem;color:var(--cream-55);line-height:1.9;"></p>
+        </div>
+      </div>
+
+      <!-- ACTIVITY LOG -->
+      <div class="detail-section">
+        <div class="detail-section-header">
+          <span>Activity Log</span>
+          <button class="btn-secondary btn-sm" id="logBtn" onclick="openActivity()" style="display:none;">+ Log Activity</button>
+        </div>
+        <div class="detail-section-body">
+          <div id="activityList"><div class="loading">Loading…</div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- LOG ACTIVITY MODAL -->
+  <div class="modal-overlay" id="activityModal" style="display:none;" onclick="if(event.target===this)closeActivity()">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Log Activity</h3>
+        <button class="modal-close" onclick="closeActivity()">×</button>
+      </div>
+      <form id="activityForm">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="actDate" required />
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Calls Made</label>
+            <input type="number" id="actCalls" min="0" value="0" />
+          </div>
+          <div class="form-group">
+            <label>Deals Closed</label>
+            <input type="number" id="actDeals" min="0" value="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Revenue Generated ($)</label>
+          <input type="number" id="actRevenue" min="0" step="0.01" value="0" placeholder="0.00" />
+        </div>
+        <div class="form-group">
+          <label>Notes</label>
+          <textarea id="actNotes" placeholder="What happened? Any key updates?"></textarea>
+        </div>
+        <div id="actError" class="error-msg" style="display:none;"></div>
+        <button type="submit" class="btn-primary" style="width:100%;">Save Entry</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    const clientId = new URLSearchParams(window.location.search).get('id');
+    let currentProfile = null;
+
+    async function init() {
+      if (!clientId) { window.location.href = 'dashboard.html'; return; }
+
+      const auth = await requireAuth();
+      if (!auth) return;
+      currentProfile = auth.profile;
+      document.getElementById('navUser').textContent = auth.profile.full_name;
+
+      const { data: client, error } = await db.from('clients')
+        .select('*, closer:assigned_closer_id(id, full_name)')
+        .eq('id', clientId)
+        .single();
+
+      if (error || !client) { window.location.href = 'dashboard.html'; return; }
+
+      // Header
+      document.getElementById('clientName').textContent = `${client.first_name} ${client.last_name}`;
+      document.getElementById('clientBiz').textContent  = client.business_name;
+      setBadge(client.stage);
+
+      // Info grid
+      document.getElementById('infoGrid').innerHTML = `
+        <div class="info-item"><div class="info-label">Email</div><div class="info-value"><a href="mailto:${client.email}" style="color:var(--walnut);">${client.email}</a></div></div>
+        <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${client.phone || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Instagram</div><div class="info-value">${client.instagram || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Program / Offer</div><div class="info-value">${client.program_type || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Leads / Month</div><div class="info-value">${client.leads_per_month || '—'}</div></div>
+        <div class="info-item"><div class="info-label">Monthly Revenue</div><div class="info-value">${client.monthly_revenue || '—'}</div></div>
+        ${client.why_rsc ? `<div class="info-item full"><div class="info-label">Why RSC</div><div class="info-value">${client.why_rsc}</div></div>` : ''}
+      `;
+
+      if (auth.profile.role === 'admin') {
+        // Admin: show management panel
+        document.getElementById('adminSection').style.display = 'block';
+        document.getElementById('stageSelect').value      = client.stage;
+        document.getElementById('notesField').value        = client.notes || '';
+        document.getElementById('leadSource').value        = client.lead_source || '';
+        document.getElementById('acquisitionCost').value  = client.acquisition_cost || '';
+        document.getElementById('callBooked').checked     = client.call_booked || false;
+        document.getElementById('showedUp').checked       = client.showed_up || false;
+
+        const { data: closers } = await db.from('profiles').select('id,full_name').eq('role','closer').order('full_name');
+        const sel = document.getElementById('closerSelect');
+        (closers || []).forEach(c => {
+          const opt = new Option(c.full_name, c.id);
+          if (c.id === client.assigned_closer_id) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      } else {
+        // Closer: show notes read-only if any
+        if (client.notes) {
+          document.getElementById('closerNotesSection').style.display = 'block';
+          document.getElementById('notesReadOnly').textContent = client.notes;
+        }
+      }
+
+      // Activity log button for both roles
+      document.getElementById('logBtn').style.display = 'inline-block';
+
+      // Set default date in modal
+      document.getElementById('actDate').value = new Date().toISOString().slice(0, 10);
+
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+
+      await loadActivity();
+    }
+
+    function setBadge(stage) {
+      const badge = document.getElementById('stageBadge');
+      badge.textContent = stage;
+      badge.className = `stage-badge ${stageCls(stage)}`;
+    }
+
+    async function loadActivity() {
+      const { data: logs } = await db.from('activity_logs')
+        .select('*, closer:closer_id(full_name)')
+        .eq('client_id', clientId)
+        .order('log_date', { ascending: false });
+
+      const list = document.getElementById('activityList');
+
+      if (!logs || !logs.length) {
+        list.innerHTML = '<div class="empty-state">No activity logged yet.</div>';
+        return;
+      }
+
+      list.innerHTML = logs.map(log => `
+        <div class="activity-entry">
+          <div class="activity-date">
+            ${formatDate(log.log_date)}
+            <small>${log.closer?.full_name || ''}</small>
+          </div>
+          <div class="activity-stat"><span>Calls Made</span>${log.calls_made}</div>
+          <div class="activity-stat"><span>Deals Closed</span>${log.deals_closed}</div>
+          <div class="activity-stat"><span>Revenue</span>${formatCurrency(log.revenue)}</div>
+          ${log.notes ? `<div class="activity-notes">"${log.notes}"</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function saveChanges(btn) {
+      const saveMsg = document.getElementById('saveMsg');
+      btn.textContent = 'Saving…'; btn.disabled = true; saveMsg.style.display = 'none';
+
+      const stage           = document.getElementById('stageSelect').value;
+      const closer          = document.getElementById('closerSelect').value || null;
+      const notes           = document.getElementById('notesField').value;
+      const lead_source     = document.getElementById('leadSource').value;
+      const acquisition_cost = parseFloat(document.getElementById('acquisitionCost').value) || 0;
+      const call_booked     = document.getElementById('callBooked').checked;
+      const showed_up       = document.getElementById('showedUp').checked;
+      const closed_at       = stage === 'Closed Won' ? new Date().toISOString() : null;
+
+      const { error } = await db.from('clients')
+        .update({ stage, assigned_closer_id: closer, notes, lead_source, acquisition_cost, call_booked, showed_up, closed_at })
+        .eq('id', clientId);
+
+      if (error) {
+        saveMsg.className = 'error-msg';
+        saveMsg.textContent = 'Failed to save. Please try again.';
+      } else {
+        saveMsg.className = 'success-msg';
+        saveMsg.textContent = 'Changes saved.';
+        setBadge(stage);
+      }
+
+      saveMsg.style.display = 'block';
+      btn.textContent = 'Save Changes'; btn.disabled = false;
+      setTimeout(() => { saveMsg.style.display = 'none'; }, 3000);
+    }
+
+    async function deleteClient() {
+      const name = document.getElementById('clientName').textContent;
+      if (!confirm(`Are you sure you want to delete ${name}? This cannot be undone.`)) return;
+      const { error } = await db.from('clients').delete().eq('id', clientId);
+      if (error) { alert('Failed to delete. Please try again.'); return; }
+      window.location.href = 'dashboard.html';
+    }
+
+    function openActivity()  { document.getElementById('activityModal').style.display = 'flex'; }
+    function closeActivity() { document.getElementById('activityModal').style.display = 'none'; }
+
+    document.getElementById('activityForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      const err = document.getElementById('actError');
+      btn.textContent = 'Saving…'; btn.disabled = true; err.style.display = 'none';
+
+      const { error } = await db.from('activity_logs').insert([{
+        client_id:    clientId,
+        closer_id:    currentProfile.id,
+        log_date:     document.getElementById('actDate').value,
+        calls_made:   parseInt(document.getElementById('actCalls').value)   || 0,
+        deals_closed: parseInt(document.getElementById('actDeals').value)   || 0,
+        revenue:      parseFloat(document.getElementById('actRevenue').value) || 0,
+        notes:        document.getElementById('actNotes').value
+      }]);
+
+      if (error) {
+        err.textContent = 'Failed to save. Please try again.';
+        err.style.display = 'block';
+      } else {
+        closeActivity();
+        e.target.reset();
+        document.getElementById('actDate').value = new Date().toISOString().slice(0, 10);
+        await loadActivity();
+      }
+
+      btn.textContent = 'Save Entry'; btn.disabled = false;
+    });
+
+    init();
+  </script>
+</body>
+</html>

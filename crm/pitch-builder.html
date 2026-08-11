@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RSC — Pitch Deck Builder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Instrument+Serif:ital@0;1&family=Poppins:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:wght@400;500;600;700;800;900&family=Cormorant:ital,wght@0,400..700;1,400..700&family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,wght@0,400..700;1,400..700&family=Inter:wght@400;500;600;700;800;900&family=Work+Sans:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Raleway:wght@400;500;600;700;800;900&family=Oswald:wght@400;500;600;700&family=Bebas+Neue&family=Lora:ital@0;1&family=Libre+Baskerville:ital@0;1&family=EB+Garamond:ital@0;1&family=Crimson+Text:ital@0;1&family=Cormorant+Garamond:ital@0;1&family=Merriweather:ital@0;1&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="pitch-builder.css" />
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: #14100E; }
+  </style>
+</head>
+<body>
+  <div id="pageLoading" style="display:flex;align-items:center;justify-content:center;height:100vh;font:600 13px Archivo,sans-serif;letter-spacing:0.12em;text-transform:uppercase;color:#6E655C;background:#14100E;">Loading…</div>
+
+  <div id="pageContent" class="pb-page" style="display:none;">
+
+    <!-- ═══ Header ═══ -->
+    <header class="pb-header">
+      <a href="pitch-decks.html" class="pb-back-link" style="flex:none;">← All Decks</a>
+      <div class="pb-brand" style="flex:none;">
+        <span class="pb-brand-rsc">RSC</span>
+        <span class="pb-brand-text">Pitch Deck Builder</span>
+      </div>
+      <div class="pb-program-title" id="programTitle">—</div>
+      <span class="pb-save-status" id="saveStatus"></span>
+      <button class="pb-ghost-btn pb-icon-btn" id="undoBtn" title="Undo" disabled>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"></polyline><path d="M20 20v-7a4 4 0 0 0-4-4H4"></path></svg>
+      </button>
+      <button class="pb-ghost-btn pb-icon-btn" id="redoBtn" title="Redo" disabled>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 14 20 9 15 4"></polyline><path d="M4 20v-7a4 4 0 0 1 4-4h12"></path></svg>
+      </button>
+      <nav class="pb-tabs">
+        <button class="pb-tab active" id="tabBuild">Build</button>
+        <button class="pb-tab" id="tabPresent">Present</button>
+        <button class="pb-tab" id="tabScript">Script</button>
+      </nav>
+      <button class="pb-ghost-btn" id="resetBtn">Reset to example</button>
+    </header>
+
+    <!-- ═══ Body ═══ -->
+    <div class="pb-body">
+
+      <!-- Form pane (Build only) -->
+      <aside class="pb-form-pane" id="formPane">
+        <p class="pb-form-hint">Type your client's details below — the deck and script update live as you type.</p>
+        <div id="formContent"></div>
+      </aside>
+
+      <!-- Deck pane (Build + Present) -->
+      <main class="pb-deck-pane" id="deckPane">
+        <div class="pb-stage-wrap" id="stageWrap">
+          <div id="slideStage"></div>
+        </div>
+        <!-- Rail (Build only) -->
+        <div class="pb-rail" id="rail"></div>
+        <!-- Slide counter (Present only) -->
+        <div class="pb-slide-counter" id="slideCounter"></div>
+      </main>
+
+      <!-- Script pane -->
+      <main class="pb-script-pane" id="scriptPane">
+        <div class="pb-script-inner" id="scriptContent"></div>
+      </main>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script src="pitch-builder.js"></script>
+</body>
+</html>

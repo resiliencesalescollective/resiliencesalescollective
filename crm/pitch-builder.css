@@ -1,0 +1,637 @@
+/* ══════════════════════════════════════════════════════
+   RSC Pitch Deck Builder — Design Tokens & Layout
+   ══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Instrument+Serif:ital@0;1&display=swap');
+
+/* ── Reset for builder pages ── */
+.pb-page *, .pb-page *::before, .pb-page *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+.pb-page {
+  font-family: Archivo, sans-serif;
+  background: #14100E;
+  color: #F3EDE3;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.pb-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+  height: 58px;
+  background: #14100E;
+  border-bottom: 1px solid #2C2620;
+  flex: none;
+  z-index: 10;
+}
+
+.pb-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  text-decoration: none;
+  flex: none;
+}
+
+.pb-brand-rsc {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 24px;
+  color: #F3EDE3;
+  line-height: 1;
+}
+
+.pb-brand-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #A08256;
+  line-height: 1;
+}
+
+.pb-program-title {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #A79C90;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pb-save-status {
+  font-size: 11px;
+  font-weight: 600;
+  color: #A79C90;
+  letter-spacing: 0.06em;
+  flex: none;
+  min-width: 60px;
+  text-align: right;
+}
+
+.pb-tabs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex: none;
+}
+
+.pb-tab {
+  font: 700 12px Archivo, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #A79C90;
+  background: transparent;
+  border: 1px solid #3A342F;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.pb-tab:hover { color: #F3EDE3; border-color: #6E655C; }
+
+.pb-tab.active {
+  color: #14100E;
+  background: #F3EDE3;
+  border-color: #F3EDE3;
+}
+
+.pb-ghost-btn {
+  font: 600 11px Archivo, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #A79C90;
+  background: none;
+  border: 1px solid #3A342F;
+  border-radius: 6px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  flex: none;
+}
+
+.pb-ghost-btn:hover { color: #F3EDE3; border-color: #6E655C; }
+
+.pb-ghost-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  color: #A79C90;
+  border-color: #3A342F;
+}
+
+.pb-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  font-size: 16px;
+}
+
+/* ── Body ── */
+.pb-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* ── Form pane ── */
+.pb-form-pane {
+  width: 390px;
+  flex: none;
+  overflow-y: auto;
+  background: #1B1714;
+  border-right: 1px solid #2C2620;
+  padding: 18px 18px 60px;
+  scrollbar-width: thin;
+  scrollbar-color: #3A342F transparent;
+}
+
+.pb-form-pane::-webkit-scrollbar { width: 4px; }
+.pb-form-pane::-webkit-scrollbar-track { background: transparent; }
+.pb-form-pane::-webkit-scrollbar-thumb { background: #3A342F; border-radius: 2px; }
+
+.pb-form-hint {
+  margin: 4px 2px 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #A79C90;
+}
+
+/* ── Accordion sections ── */
+.pb-section {
+  margin-bottom: 8px;
+  background: #221D19;
+  border: 1px solid #2C2620;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pb-section summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+
+.pb-section summary::-webkit-details-marker { display: none; }
+.pb-section summary::marker { display: none; }
+
+.pb-section-num {
+  color: #A08256;
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 15px;
+  letter-spacing: 0;
+  flex: none;
+}
+
+.pb-section-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #F3EDE3;
+}
+
+.pb-section-body {
+  padding: 4px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Form fields ── */
+.pb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pb-field-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #A79C90;
+}
+
+.pb-field-input,
+.pb-field-textarea {
+  font: 500 13.5px Archivo, sans-serif;
+  color: #F3EDE3;
+  background: #14100E;
+  border: 1px solid #3A342F;
+  border-radius: 7px;
+  padding: 9px 11px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.pb-field-input:focus,
+.pb-field-textarea:focus { border-color: #A08256; }
+
+.pb-field-textarea {
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.pb-color-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.pb-field-color {
+  padding: 4px;
+  width: 44px;
+  height: 38px;
+  flex: none;
+  cursor: pointer;
+  border: 1px solid #3A342F;
+  border-radius: 7px;
+  background: transparent;
+}
+
+.pb-field-hex {
+  flex: 1;
+  text-transform: uppercase;
+}
+
+select.pb-field-input {
+  cursor: pointer;
+  appearance: auto;
+}
+
+.pb-field-hint {
+  font-size: 11px;
+  color: #6E655C;
+  line-height: 1.4;
+}
+
+/* ── Image upload ── */
+.pb-upload-preview {
+  width: 100%;
+  height: 110px;
+  background: #14100E;
+  border: 1px solid #3A342F;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.pb-upload-placeholder {
+  font-size: 12px;
+  color: #6E655C;
+}
+
+.pb-upload-btn {
+  font: 600 11px Archivo, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #A79C90;
+  background: none;
+  border: 1px solid #3A342F;
+  border-radius: 6px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  align-self: flex-start;
+}
+
+.pb-upload-btn:hover { color: #F3EDE3; border-color: #6E655C; }
+
+/* ── Deck pane ── */
+.pb-deck-pane {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  background: #0D0A08;
+  display: flex;
+}
+
+.pb-stage-wrap {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+#slideStage {
+  width: 1920px;
+  height: 1080px;
+  position: absolute;
+  transform-origin: top left;
+}
+
+/* ── Rail ── */
+.pb-rail {
+  width: 180px;
+  flex: none;
+  overflow-y: auto;
+  background: #0D0A08;
+  border-left: 1px solid #1A1612;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #2C2620 transparent;
+}
+
+.pb-rail::-webkit-scrollbar { width: 3px; }
+.pb-rail::-webkit-scrollbar-thumb { background: #2C2620; border-radius: 2px; }
+
+.pb-thumb {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.pb-thumb:hover { border-color: #6E655C; }
+.pb-thumb.active { border-color: #A08256; }
+
+.pb-thumb-inner {
+  width: 1920px;
+  height: 1080px;
+  transform: scale(0.08333);
+  transform-origin: top left;
+  pointer-events: none;
+  display: block;
+}
+
+/* container holds scaled content at 160×90px */
+.pb-thumb-content {
+  width: 160px;
+  height: 90px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pb-thumb-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6E655C;
+  padding: 3px 4px 4px;
+  background: #0D0A08;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Slide counter (Present view) ── */
+.pb-slide-counter {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 600 13px Archivo, sans-serif;
+  letter-spacing: 0.12em;
+  color: rgba(243,237,227,0.7);
+  background: rgba(20,16,14,0.6);
+  border-radius: 20px;
+  padding: 6px 16px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+  z-index: 10;
+}
+
+/* ── Script pane ── */
+.pb-script-pane {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  background: #F3EDE3;
+  display: none;
+}
+
+.pb-script-inner {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 70px 40px 120px;
+  color: #14100E;
+}
+
+/* ── List page (pitch-decks.html) ── */
+.pd-page {
+  font-family: Archivo, sans-serif;
+  background: #14100E;
+  color: #F3EDE3;
+  min-height: 100vh;
+}
+
+.pd-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 32px;
+  height: 58px;
+  background: #14100E;
+  border-bottom: 1px solid #2C2620;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.pd-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
+
+.pd-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.pd-page-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: #F3EDE3;
+}
+
+.pb-btn-primary {
+  font: 700 12px Archivo, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #14100E;
+  background: #F3EDE3;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.pb-btn-primary:hover { background: #E8E2D8; }
+
+.pd-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pd-card {
+  background: #1B1714;
+  border: 1px solid #2C2620;
+  border-radius: 10px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: border-color 0.15s;
+}
+
+.pd-card:hover { border-color: #3A342F; }
+
+.pd-card-info { flex: 1; min-width: 0; }
+
+.pd-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #F3EDE3;
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pd-card-date {
+  font-size: 12px;
+  color: #6E655C;
+  letter-spacing: 0.04em;
+}
+
+.pd-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex: none;
+}
+
+.pd-btn-open {
+  font: 700 11px Archivo, sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #14100E;
+  background: #A08256;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: background 0.15s;
+}
+
+.pd-btn-open:hover { background: #7E663F; }
+
+.pd-btn-ghost {
+  font: 600 11px Archivo, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6E655C;
+  background: none;
+  border: 1px solid #2C2620;
+  border-radius: 6px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pd-btn-ghost:hover { color: #F3EDE3; border-color: #6E655C; }
+
+.pd-btn-danger {
+  font: 600 11px Archivo, sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #9A6A6A;
+  background: none;
+  border: 1px solid #2C2620;
+  border-radius: 6px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pd-btn-danger:hover { color: #c0392b; border-color: #9A6A6A; }
+
+.pd-empty {
+  text-align: center;
+  padding: 64px 32px;
+  color: #6E655C;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.pd-loading {
+  text-align: center;
+  padding: 64px 32px;
+  color: #6E655C;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Shared nav elements */
+.pb-nav-user {
+  font-size: 12px;
+  color: #A79C90;
+  margin-right: 4px;
+}
+
+.pb-nav-signout {
+  font: 600 11px Archivo, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6E655C;
+  background: none;
+  border: 1px solid #2C2620;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pb-nav-signout:hover { color: #F3EDE3; border-color: #6E655C; }
+
+.pb-back-link {
+  font: 600 11px Archivo, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6E655C;
+  text-decoration: none;
+  border: 1px solid #2C2620;
+  border-radius: 6px;
+  padding: 6px 12px;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.pb-back-link:hover { color: #F3EDE3; border-color: #6E655C; }
