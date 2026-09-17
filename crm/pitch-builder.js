@@ -440,16 +440,22 @@ function slideCloseToday(d) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:44px;flex:1;">
       <div style="background:#FFFFFF;border:1px solid ${S.cardBorder};border-radius:18px;padding:50px 48px;display:flex;flex-direction:column;gap:20px;">
         <div style="font-size:38px;font-weight:800;">${esc(d.pkg1Name)}</div>
-        <div style="font-size:30px;color:${S.mutedOnLight};"><span style="text-decoration:line-through;">${esc(d.pkg1Price)}</span></div>
-        <div style="display:flex;align-items:baseline;gap:18px;margin-top:auto;">
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          ${lines(d.pkg1Features).map(f => `<div style="display:flex;gap:12px;font-size:22px;line-height:1.3;color:${S.bodyOnLight};"><span style="color:${S.accent};font-weight:900;">✓</span><span>${esc(f)}</span></div>`).join('')}
+        </div>
+        <div style="font-size:30px;color:${S.mutedOnLight};margin-top:auto;"><span style="text-decoration:line-through;">${esc(d.pkg1Price)}</span></div>
+        <div style="display:flex;align-items:baseline;gap:18px;">
           <span style="font-size:84px;font-weight:900;color:${S.accent};">${esc(d.pkg1Today)}</span>
           <span style="font-size:24px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;color:${S.darkC};">Today only</span>
         </div>
       </div>
       <div style="background:${S.darkC};color:${S.lightC};border-radius:18px;padding:50px 48px;display:flex;flex-direction:column;gap:20px;">
         <div style="font-size:38px;font-weight:800;">${esc(d.pkg2Name)}</div>
-        <div style="font-size:30px;color:${S.hint};"><span style="text-decoration:line-through;">${esc(d.pkg2Price)}</span></div>
-        <div style="display:flex;align-items:baseline;gap:18px;margin-top:auto;">
+        <div style="display:flex;flex-direction:column;gap:11px;">
+          ${lines(d.pkg2Features).map(f => `<div style="display:flex;gap:12px;font-size:22px;line-height:1.3;color:${S.mutedOnDark};"><span style="color:${S.accent};font-weight:900;">✓</span><span>${esc(f)}</span></div>`).join('')}
+        </div>
+        <div style="font-size:30px;color:${S.hint};margin-top:auto;"><span style="text-decoration:line-through;">${esc(d.pkg2Price)}</span></div>
+        <div style="display:flex;align-items:baseline;gap:18px;">
           <span style="font-size:84px;font-weight:900;color:${S.accent};">${esc(d.pkg2Today)}</span>
           <span style="font-size:24px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;">Today only</span>
         </div>
