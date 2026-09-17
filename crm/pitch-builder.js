@@ -350,7 +350,7 @@ function slideFeature(fs) {
 
 function slideSoftwareShowcase(d) {
   const shot = d.showcaseImageUrl
-    ? `<img src="${esc(d.showcaseImageUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:14px;" alt="">`
+    ? `<img src="${esc(d.showcaseImageUrl)}" style="width:100%;height:100%;object-fit:contain;border-radius:14px;" alt="">`
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${S.placeholderBg};font-size:28px;font-family:${S.headingFont};color:${S.hint};border-radius:14px;">Software screenshot</div>`;
   return `<div style="${S.ivory}padding:100px 130px;display:flex;flex-direction:column;gap:40px;">
     <div style="${S.serif}font-size:34px;line-height:1.4;color:${S.bodyOnLight};max-width:1200px;">${esc(d.showcaseTitle)}</div>
