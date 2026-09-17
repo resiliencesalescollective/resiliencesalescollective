@@ -521,6 +521,25 @@ select.pb-field-input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pd-template-badge {
+  font: 700 9.5px Archivo, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #14100E;
+  background: #A08256;
+  border-radius: 4px;
+  padding: 3px 7px;
+  flex: none;
+}
+
+.pd-btn-ghost.is-template {
+  color: #A08256;
+  border-color: #A08256;
 }
 
 .pd-card-date {

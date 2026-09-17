@@ -58,7 +58,7 @@
 
       const { data: decks, error } = await db
         .from('pitch_decks')
-        .select('id, client_name, program_name, created_at')
+        .select('id, client_name, program_name, created_at, is_template')
         .order('created_at', { ascending: false });
 
       document.getElementById('pageLoading').style.display = 'none';
@@ -76,10 +76,11 @@
       document.getElementById('deckList').innerHTML = decks.map(d => `
         <div class="pd-card">
           <div class="pd-card-info">
-            <div class="pd-card-name">${escHtml(d.client_name || d.program_name || 'Untitled Pitch')}</div>
+            <div class="pd-card-name">${escHtml(d.client_name || d.program_name || 'Untitled Pitch')}${d.is_template ? '<span class="pd-template-badge">Template</span>' : ''}</div>
             <div class="pd-card-date">${formatDate(d.created_at)}</div>
           </div>
           <div class="pd-card-actions">
+            <button class="pd-btn-ghost ${d.is_template ? 'is-template' : ''}" onclick="setTemplate('${d.id}')">${d.is_template ? '★ Template' : 'Set as Template'}</button>
             <button class="pd-btn-ghost" onclick="duplicateDeck('${d.id}')">Duplicate</button>
             <button class="pd-btn-danger" onclick="deleteDeck('${d.id}', this)">Delete</button>
             <a href="pitch-builder.html?id=${d.id}" class="pd-btn-open">Open →</a>
@@ -87,14 +88,40 @@
         </div>`).join('');
     }
 
+    async function setTemplate(id) {
+      await db.from('pitch_decks').update({ is_template: false }).neq('id', id);
+      await db.from('pitch_decks').update({ is_template: true }).eq('id', id);
+      await loadDecks();
+    }
+
     async function createNew() {
       const btn = document.getElementById('newBtn');
       btn.textContent = 'Creating…';
       btn.disabled = true;
 
+      const { data: template } = await db
+        .from('pitch_decks')
+        .select('*')
+        .eq('is_template', true)
+        .limit(1)
+        .maybeSingle();
+
+      let insertPayload;
+      if (template) {
+        insertPayload = { ...template };
+        delete insertPayload.id;
+        delete insertPayload.created_at;
+        delete insertPayload.updated_at;
+        insertPayload.user_id = currentUserId;
+        insertPayload.client_name = 'Untitled Pitch';
+        insertPayload.is_template = false;
+      } else {
+        insertPayload = { user_id: currentUserId, client_name: 'Untitled Pitch' };
+      }
+
       const { data, error } = await db
         .from('pitch_decks')
-        .insert([{ user_id: currentUserId, client_name: 'Untitled Pitch' }])
+        .insert([insertPayload])
         .select()
         .single();
 
@@ -123,6 +150,7 @@
       delete copy.updated_at;
       copy.user_id = currentUserId;
       copy.client_name = (src.client_name || 'Untitled Pitch') + ' (Copy)';
+      copy.is_template = false;
 
       const { data: newDeck, error: insertErr } = await db
         .from('pitch_decks')
