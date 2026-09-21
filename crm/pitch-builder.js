@@ -26,12 +26,9 @@ const DEFAULTS = {
   p3Weeks: 'Weeks 6–9', p3Title: 'Mastering the end of the call',
   p3Skills: 'Smokescreens\nObjections\nOnboarding\nPipeline & follow-up',
   p3Checks: 'Complete tier 3 training modules\nAttend 3x tier 3 group coaching calls',
-  g1Weeks: 'Weeks 9–10', g1Title: 'Take your first closing call',
-  g1Text: 'A full 1-on-1 role-play graduation call with your coach. Pass it, and you are a certified She Sells remote closer — with an invite to the graduate event.',
-  g2Weeks: 'Week 11', g2Title: 'Start your job search',
-  g2Text: 'Time to get to work. You’re certified, with full access to the graduate software and support system.',
-  g3Weeks: 'Week 12+', g3Title: 'Graduation — start getting paid',
-  g3Text: 'Find a creator you love, land your dream remote closing job, and take your first commission check.',
+  closerTrainingTitle: 'Every Closer Is She Sells Certified',
+  closerTrainingIntro: 'Before a single closer ever gets on a call with your leads, they’ve been trained, tested, and certified through Shelby Sapp’s She Sells program — the same training that’s produced some of the top-performing remote closers in the industry.',
+  closerTrainingPoints: 'Complete the full She Sells sales training curriculum\nPass a live role-play evaluation with a She Sells coach\nOngoing call reviews and coaching to stay sharp',
   platformName: '‘She Sells Remote’ Training Platform',
   feature1: 'Video training modules',
   feature2: 'Full coaching staff',
@@ -125,16 +122,10 @@ const FORM_SECTIONS = [
     { key: 'p3Skills', label: 'Phase 3 · skills (one per line)', type: 'textarea', rows: 3 },
     { key: 'p3Checks', label: 'Phase 3 · checkpoints (one per line)', type: 'textarea', rows: 2 }
   ]},
-  { num: '05', title: 'The finish line', fields: [
-    { key: 'g1Weeks', label: 'Step 1 · when', type: 'input' },
-    { key: 'g1Title', label: 'Step 1 · title', type: 'input' },
-    { key: 'g1Text', label: 'Step 1 · description', type: 'textarea', rows: 3 },
-    { key: 'g2Weeks', label: 'Step 2 · when', type: 'input' },
-    { key: 'g2Title', label: 'Step 2 · title', type: 'input' },
-    { key: 'g2Text', label: 'Step 2 · description', type: 'textarea', rows: 3 },
-    { key: 'g3Weeks', label: 'Step 3 · when', type: 'input' },
-    { key: 'g3Title', label: 'Step 3 · title', type: 'input' },
-    { key: 'g3Text', label: 'Step 3 · description', type: 'textarea', rows: 3 }
+  { num: '05', title: 'Closer training', fields: [
+    { key: 'closerTrainingTitle', label: 'Headline', type: 'input' },
+    { key: 'closerTrainingIntro', label: 'Intro line', type: 'textarea', rows: 3 },
+    { key: 'closerTrainingPoints', label: 'Certification highlights — one per line', type: 'textarea', rows: 4, hint: 'Each line becomes its own highlight card (works best with 3).' }
   ]},
   { num: '06', title: 'The value stack', fields: [
     { key: 'platformName', label: 'Platform / offer name (revealed first)', type: 'input' },
@@ -311,25 +302,23 @@ function slideRoadmap(d) {
   </div>`;
 }
 
-function slideFinishLine(d) {
-  const grads = [1, 2, 3].map(i => ({
-    weeks: esc(d[`g${i}Weeks`]),
-    title: esc(d[`g${i}Title`]),
-    text: esc(d[`g${i}Text`])
-  }));
-  return `<div style="${S.ivory}padding:90px 110px;display:flex;flex-direction:column;gap:50px;">
-    <div style="display:flex;flex-direction:column;gap:18px;">
-      <div style="${S.eyebrow}">The finish line</div>
-      <div style="font-size:72px;font-weight:900;text-transform:uppercase;line-height:1;">${esc(d.roadmapTitle)}</div>
+function slideCloserTraining(d) {
+  const points = lines(d.closerTrainingPoints).map(esc);
+  const cardBg = mix(S.darkC, S.lightC, 0.07);
+  const cardBorder = mix(S.darkC, S.lightC, 0.16);
+  return `<div style="${S.dark}padding:100px 130px;display:flex;flex-direction:column;justify-content:center;gap:50px;">
+    <div style="display:flex;flex-direction:column;gap:18px;max-width:1500px;">
+      <div style="${S.eyebrow}">Every closer, certified</div>
+      <div style="font-size:70px;font-weight:900;text-transform:uppercase;line-height:1.02;">${esc(d.closerTrainingTitle)}</div>
+      <div style="${S.serif}font-size:30px;line-height:1.45;color:${S.mutedOnDark};">${esc(d.closerTrainingIntro)}</div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;flex:1;">
-      ${grads.map(g => `
-        <div style="background:${S.darkC};color:${S.lightC};border-radius:16px;padding:44px 40px;display:flex;flex-direction:column;gap:22px;">
-          <div style="font-size:22px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:${S.accent};">${g.weeks}</div>
-          <div style="font-size:40px;font-weight:800;line-height:1.1;">${g.title}</div>
-          <div style="font-size:26px;line-height:1.5;color:${S.mutedOnDark};">${g.text}</div>
+    ${points.length ? `<div style="display:grid;grid-template-columns:repeat(${Math.min(points.length, 3)},1fr);gap:30px;">
+      ${points.map((p, i) => `
+        <div style="background:${cardBg};border:1px solid ${cardBorder};border-radius:14px;padding:34px 30px;display:flex;flex-direction:column;gap:14px;">
+          <div style="font-size:20px;font-weight:900;color:${S.accent};">0${i + 1}</div>
+          <div style="font-size:24px;font-weight:700;line-height:1.3;">${p}</div>
         </div>`).join('')}
-    </div>
+    </div>` : ''}
   </div>`;
 }
 
@@ -494,7 +483,7 @@ function computeSlides() {
     { label: '04 Founder', html: slideFounder(d) },
     { label: '05 How It Works', html: slideTransition(d) },
     { label: '06 Roadmap', html: slideRoadmap(d) },
-    { label: '07 Finish Line', html: slideFinishLine(d) },
+    { label: '07 Closer Training', html: slideCloserTraining(d) },
     ...beforeShowcase.map(fs => ({ label: fs.label, html: slideFeature(fs) })),
     { label: 'Software Showcase', html: slideSoftwareShowcase(d) },
     ...afterShowcase.map(fs => ({ label: fs.label, html: slideFeature(fs) })),
@@ -569,10 +558,10 @@ function computeScript(d) {
       cue: 'Commitment question: “Which phase are you most excited to master?”'
     },
     {
-      slides: ['07 Finish Line'],
-      heading: 'Slide 7 · The finish line',
-      body: 'Slow down here — this is where they see their future self.',
-      cue: ''
+      slides: ['07 Closer Training'],
+      heading: 'Slide 7 · Closer training',
+      body: `Every closer that works your leads goes through Shelby Sapp’s She Sells program before they ever touch a call — trained, tested, and certified. This is why you can trust the person representing your brand.`,
+      cue: 'This is a trust-builder — let it sit for a moment before moving on.'
     },
     ...beforeBlocks,
     {
@@ -879,9 +868,7 @@ async function saveRecord() {
     p1_weeks: d.p1Weeks, p1_title: d.p1Title, p1_skills: d.p1Skills, p1_checks: d.p1Checks,
     p2_weeks: d.p2Weeks, p2_title: d.p2Title, p2_skills: d.p2Skills, p2_checks: d.p2Checks,
     p3_weeks: d.p3Weeks, p3_title: d.p3Title, p3_skills: d.p3Skills, p3_checks: d.p3Checks,
-    g1_weeks: d.g1Weeks, g1_title: d.g1Title, g1_text: d.g1Text,
-    g2_weeks: d.g2Weeks, g2_title: d.g2Title, g2_text: d.g2Text,
-    g3_weeks: d.g3Weeks, g3_title: d.g3Title, g3_text: d.g3Text,
+    closer_training_title: d.closerTrainingTitle, closer_training_intro: d.closerTrainingIntro, closer_training_points: d.closerTrainingPoints,
     platform_name: d.platformName,
     feature1: d.feature1, feature2: d.feature2, feature3: d.feature3,
     feature4: d.feature4, feature5: d.feature5, feature6: d.feature6,
@@ -1085,9 +1072,9 @@ async function init() {
     p2Skills: record.p2_skills || '', p2Checks: record.p2_checks || '',
     p3Weeks: record.p3_weeks || '', p3Title: record.p3_title || '',
     p3Skills: record.p3_skills || '', p3Checks: record.p3_checks || '',
-    g1Weeks: record.g1_weeks || '', g1Title: record.g1_title || '', g1Text: record.g1_text || '',
-    g2Weeks: record.g2_weeks || '', g2Title: record.g2_title || '', g2Text: record.g2_text || '',
-    g3Weeks: record.g3_weeks || '', g3Title: record.g3_title || '', g3Text: record.g3_text || '',
+    closerTrainingTitle: record.closer_training_title || '',
+    closerTrainingIntro: record.closer_training_intro || '',
+    closerTrainingPoints: record.closer_training_points || '',
     platformName: record.platform_name || '',
     feature1: record.feature1 || '', feature2: record.feature2 || '', feature3: record.feature3 || '',
     feature4: record.feature4 || '', feature5: record.feature5 || '', feature6: record.feature6 || '',
