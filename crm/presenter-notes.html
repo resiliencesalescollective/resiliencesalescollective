@@ -96,6 +96,28 @@
       max-width: 340px;
     }
     .waiting b { color: #A79C90; }
+    .nav-row {
+      flex: none;
+      display: flex;
+      gap: 10px;
+      padding: 16px 22px;
+      border-top: 1px solid #2C2620;
+    }
+    .nav-btn {
+      flex: 1;
+      font: 700 12px Archivo, sans-serif;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #F3EDE3;
+      background: #1B1714;
+      border: 1px solid #3A342F;
+      border-radius: 8px;
+      padding: 12px 0;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .nav-btn:hover { border-color: #A08256; background: #241E19; }
+    .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -116,14 +138,23 @@
     <div class="next-text" id="nextText">—</div>
   </div>
 
+  <div class="nav-row" id="navRow" style="display:none;">
+    <button class="nav-btn" id="prevBtn">← Back</button>
+    <button class="nav-btn" id="nextBtn">Next →</button>
+  </div>
+
   <script>
     const params = new URLSearchParams(window.location.search);
     const deckId = params.get('id');
     const channel = new BroadcastChannel('pitch-presenter-' + deckId);
 
+    let current = null;
+
     function render(msg) {
+      current = msg;
       document.getElementById('waiting').style.display = 'none';
       document.getElementById('nextBlock').style.display = 'block';
+      document.getElementById('navRow').style.display = 'flex';
       document.getElementById('counter').textContent = (msg.index + 1) + ' / ' + msg.total;
 
       const main = document.getElementById('main');
@@ -137,11 +168,27 @@
       document.getElementById('nextText').textContent = msg.nextLabel
         ? msg.nextLabel + (msg.nextNote ? ' — ' + msg.nextNote : '')
         : 'This is the last slide.';
+
+      document.getElementById('prevBtn').disabled = msg.index <= 0;
+      document.getElementById('nextBtn').disabled = msg.index >= msg.total - 1;
     }
 
     function escapeHtml(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
+
+    function goTo(dir) {
+      if (!current) return;
+      channel.postMessage({ type: 'nav', dir });
+    }
+
+    document.getElementById('prevBtn').addEventListener('click', () => goTo('prev'));
+    document.getElementById('nextBtn').addEventListener('click', () => goTo('next'));
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); goTo('next'); }
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo('prev'); }
+    });
 
     channel.addEventListener('message', (e) => {
       if (e.data && e.data.type === 'update') render(e.data);

@@ -634,7 +634,14 @@ function getPresenterChannel() {
   if (presenterChannel || !state.recordId || typeof BroadcastChannel === 'undefined') return presenterChannel;
   presenterChannel = new BroadcastChannel('pitch-presenter-' + state.recordId);
   presenterChannel.addEventListener('message', e => {
-    if (e.data && e.data.type === 'ready') broadcastPresenterNotes();
+    if (!e.data) return;
+    if (e.data.type === 'ready') broadcastPresenterNotes();
+    if (e.data.type === 'nav') {
+      const total = computeSlides().length;
+      if (e.data.dir === 'next') state.slideIndex = Math.min(state.slideIndex + 1, total - 1);
+      else if (e.data.dir === 'prev') state.slideIndex = Math.max(state.slideIndex - 1, 0);
+      render();
+    }
   });
   return presenterChannel;
 }
