@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Presenter Notes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: Archivo, sans-serif;
+      background: #14100E;
+      color: #F3EDE3;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 22px;
+      border-bottom: 1px solid #2C2620;
+    }
+    .brand {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #A08256;
+    }
+    .counter {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #A79C90;
+    }
+    main {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 32px 34px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+    .slide-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #A08256;
+      margin-bottom: 10px;
+    }
+    .note-text {
+      font-size: 22px;
+      line-height: 1.55;
+      color: #F3EDE3;
+      white-space: pre-line;
+    }
+    .cue {
+      margin-top: 16px;
+      font-size: 16px;
+      line-height: 1.55;
+      color: #A79C90;
+      font-style: italic;
+    }
+    .next-block {
+      flex: none;
+      border-top: 1px solid #2C2620;
+      padding: 22px 34px 26px;
+    }
+    .next-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #6E655C;
+      margin-bottom: 8px;
+    }
+    .next-text {
+      font-size: 15px;
+      line-height: 1.5;
+      color: #A79C90;
+    }
+    .waiting {
+      margin: auto;
+      text-align: center;
+      color: #6E655C;
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 340px;
+    }
+    .waiting b { color: #A79C90; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand">RSC · Presenter Notes</span>
+    <span class="counter" id="counter">—</span>
+  </header>
+
+  <main id="main">
+    <div class="waiting" id="waiting">
+      Waiting for the presentation to start…<br><br>
+      Go back to the deck tab, click <b>Present</b>, and this window will follow along automatically.
+    </div>
+  </main>
+
+  <div class="next-block" id="nextBlock" style="display:none;">
+    <div class="next-label">Up next</div>
+    <div class="next-text" id="nextText">—</div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const deckId = params.get('id');
+    const channel = new BroadcastChannel('pitch-presenter-' + deckId);
+
+    function render(msg) {
+      document.getElementById('waiting').style.display = 'none';
+      document.getElementById('nextBlock').style.display = 'block';
+      document.getElementById('counter').textContent = (msg.index + 1) + ' / ' + msg.total;
+
+      const main = document.getElementById('main');
+      main.innerHTML = `
+        <div>
+          <div class="slide-label">${escapeHtml(msg.slideLabel || '')}</div>
+          <div class="note-text">${escapeHtml(msg.note || '')}</div>
+          ${msg.cue ? `<div class="cue">${escapeHtml(msg.cue)}</div>` : ''}
+        </div>`;
+
+      document.getElementById('nextText').textContent = msg.nextLabel
+        ? msg.nextLabel + (msg.nextNote ? ' — ' + msg.nextNote : '')
+        : 'This is the last slide.';
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    channel.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'update') render(e.data);
+    });
+
+    // Ask the presenting window to resend its current slide, in case it was
+    // already presenting before this notes window opened.
+    channel.postMessage({ type: 'ready' });
+  </script>
+</body>
+</html>

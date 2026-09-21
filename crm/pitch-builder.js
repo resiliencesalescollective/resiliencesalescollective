@@ -508,6 +508,77 @@ function computeSlides() {
   ];
 }
 
+// ─── Presenter notes (mirrors computeSlides() order exactly) ──
+function computeNotes(d) {
+  const items = [d.platformName, d.feature1, d.feature2, d.feature3, d.feature4, d.feature5, d.feature6]
+    .filter(t => String(t || '').trim());
+
+  let featureNotes = items.map((t, i) => ({
+    label: `Value ${i + 1}`,
+    note: `Reveal: “${t}.”`,
+    cue: i === items.length - 1
+      ? 'After this reveal, ask: “Which of these is the biggest game-changer for you?”'
+      : 'Explain what this does for THEM specifically — tie it to their discovery answers. Don’t dump the whole list at once.'
+  }));
+  if (!featureNotes.length) featureNotes = [{ label: 'Value stack', note: 'Walk through what’s included.', cue: '' }];
+
+  const beforeShowcase = featureNotes.slice(0, 5);
+  const afterShowcase = featureNotes.slice(5);
+  if (beforeShowcase.length) {
+    beforeShowcase[beforeShowcase.length - 1].cue = 'Then say: “Let me show you exactly what this looks like.”';
+  }
+
+  return [
+    { label: '01 Hook', note: `“${d.programName} is not just ${d.category}. It’s bigger than that: ${d.movement}”`, cue: 'Pause after the movement line. Then: “By the end of this call, you’ll know whether this is right for you — fair enough?”' },
+    { label: '02 Movement', note: d.movement, cue: 'Let it land. Don’t rush into the next slide.' },
+    { label: '03 Proof', note: 'Walk each stat slowly, one at a time. The numbers do the selling.', cue: 'Discovery question: “Out of curiosity — what made YOU decide now was the time to look at this?”' },
+    { label: '04 Founder', note: `Tell ${d.founderName}'s story in your own words, in order — where they started, what they built, why they built this.`, cue: 'Close the story by tying it back to why this was built for someone exactly like your prospect.' },
+    { label: '05 How It Works', note: `“So how does ${d.programName} actually work? Let me walk you through it step by step.”`, cue: '' },
+    { label: '06 Roadmap', note: 'Walk each phase in order, pause after each, and connect it to what they told you in discovery.', cue: 'Commitment question: “Which phase are you most excited to master?”' },
+    { label: '07 Finish Line', note: 'Slow down here — this is where they see their future self.', cue: '' },
+    ...beforeShowcase,
+    { label: 'Software Showcase', note: `“${d.showcaseTitle}” ${d.showcaseDesc}`, cue: 'Say it once, pause. Let the screen do the work — don’t oversell it.' },
+    ...afterShowcase,
+    { label: 'The Claim', note: `“${d.boldClaim}”`, cue: 'Say it like a fact, because it is. Then silence.' },
+    { label: 'The Promise', note: `“${d.promiseTitle}” ${d.promise}`, cue: 'Drop the pitch voice. Read this like you mean it — this is the emotional peak of the call.' },
+    { label: 'The Bonus', note: `${d.bonusName}: ${d.bonusDesc}`, cue: 'Frame this as the unfair advantage — the reason there’s no comparison shopping.' },
+    { label: 'The Bonus (showcase)', note: d.bonusExpandedDesc, cue: '' },
+    { label: 'Packages', note: `Present ${d.pkg1Name} at ${d.pkg1Price}, then ${d.pkg2Name} at ${d.pkg2Price}. Recommend the one that’s genuinely right for them — then stop talking.`, cue: 'First one to speak loses.' },
+    { label: 'Day One', note: `“${d.closerLine}”`, cue: 'Pause. Then: “So which is it for you?”' },
+    ...(d.showTodayPricing !== false ? [{ label: 'Close Today', note: `If they’re ready to decide today, reveal the today-only pricing: ${d.pkg1Today} and ${d.pkg2Today}.`, cue: 'Roll every objection back to their own reasons. Don’t end the call without a decision — yes or no, never maybe.' }] : [])
+  ];
+}
+
+// ─── Presenter notes window (broadcast) ────────────────────────
+let presenterChannel = null;
+
+function getPresenterChannel() {
+  if (presenterChannel || !state.recordId || typeof BroadcastChannel === 'undefined') return presenterChannel;
+  presenterChannel = new BroadcastChannel('pitch-presenter-' + state.recordId);
+  presenterChannel.addEventListener('message', e => {
+    if (e.data && e.data.type === 'ready') broadcastPresenterNotes();
+  });
+  return presenterChannel;
+}
+
+function broadcastPresenterNotes() {
+  const channel = getPresenterChannel();
+  if (!channel) return;
+  const slides = computeSlides();
+  const notes = computeNotes(state.data);
+  const i = state.slideIndex;
+  channel.postMessage({
+    type: 'update',
+    index: i,
+    total: slides.length,
+    slideLabel: slides[i] ? slides[i].label : '',
+    note: notes[i] ? notes[i].note : '',
+    cue: notes[i] ? notes[i].cue : '',
+    nextLabel: slides[i + 1] ? slides[i + 1].label : '',
+    nextNote: notes[i + 1] ? notes[i + 1].note : ''
+  });
+}
+
 // ─── Render ──────────────────────────────────────────────────
 function render() {
   const slides = computeSlides();
@@ -523,6 +594,8 @@ function render() {
 
   if (state.view === 'build') renderRail(slides);
   if (state.view === 'script') renderScript();
+
+  broadcastPresenterNotes();
 }
 
 function renderRail(slides) {
@@ -1001,6 +1074,18 @@ async function init() {
   // Undo / redo
   document.getElementById('undoBtn').addEventListener('click', undoEdit);
   document.getElementById('redoBtn').addEventListener('click', redoEdit);
+
+  // Presenter notes — opens a private notes window for the closer's own screen
+  document.getElementById('presenterNotesBtn').addEventListener('click', () => {
+    getPresenterChannel();
+    const win = window.open(
+      `presenter-notes.html?id=${state.recordId}`,
+      'presenterNotes_' + state.recordId,
+      'width=480,height=800,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
+    );
+    if (win) win.focus();
+    setTimeout(broadcastPresenterNotes, 400);
+  });
 
   // Reset to example
   document.getElementById('resetBtn').addEventListener('click', () => {
