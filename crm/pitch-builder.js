@@ -29,6 +29,7 @@ const DEFAULTS = {
   closerTrainingTitle: 'Every Closer Is She Sells Certified',
   closerTrainingIntro: 'Before a single closer ever gets on a call with your leads, they’ve been trained, tested, and certified through Shelby Sapp’s She Sells program — the same training that’s produced some of the top-performing remote closers in the industry.',
   closerTrainingPoints: 'Complete the full She Sells sales training curriculum\nPass a live role-play evaluation with a She Sells coach\nOngoing call reviews and coaching to stay sharp',
+  closerTrainingPhotoUrl: '',
   platformName: '‘She Sells Remote’ Training Platform',
   feature1: 'Video training modules',
   feature2: 'Full coaching staff',
@@ -125,7 +126,8 @@ const FORM_SECTIONS = [
   { num: '05', title: 'Closer training', fields: [
     { key: 'closerTrainingTitle', label: 'Headline', type: 'input' },
     { key: 'closerTrainingIntro', label: 'Intro line', type: 'textarea', rows: 3 },
-    { key: 'closerTrainingPoints', label: 'Certification highlights — one per line', type: 'textarea', rows: 4, hint: 'Each line becomes its own highlight card (works best with 3).' }
+    { key: 'closerTrainingPoints', label: 'Certification highlights — one per line', type: 'textarea', rows: 4, hint: 'Each line becomes its own highlight card (works best with 3).' },
+    { key: 'closerTrainingPhotoUrl', label: 'Photo', type: 'image', imageId: 'closerTraining' }
   ]},
   { num: '06', title: 'The value stack', fields: [
     { key: 'platformName', label: 'Platform / offer name (revealed first)', type: 'input' },
@@ -306,19 +308,23 @@ function slideCloserTraining(d) {
   const points = lines(d.closerTrainingPoints).map(esc);
   const cardBg = mix(S.darkC, S.lightC, 0.07);
   const cardBorder = mix(S.darkC, S.lightC, 0.16);
-  return `<div style="${S.dark}padding:100px 130px;display:flex;flex-direction:column;justify-content:center;gap:50px;">
-    <div style="display:flex;flex-direction:column;gap:18px;max-width:1500px;">
+  const photo = d.closerTrainingPhotoUrl
+    ? `<img src="${esc(d.closerTrainingPhotoUrl)}" style="width:100%;height:100%;object-fit:cover;" alt="">`
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${cardBg};font-size:28px;font-family:${S.headingFont};color:${S.hint};border-radius:18px;">Photo</div>`;
+  return `<div style="${S.dark}padding:90px 110px;display:flex;gap:80px;align-items:center;overflow:hidden;">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:26px;">
       <div style="${S.eyebrow}">Every closer, certified</div>
-      <div style="font-size:70px;font-weight:900;text-transform:uppercase;line-height:1.02;">${esc(d.closerTrainingTitle)}</div>
-      <div style="${S.serif}font-size:30px;line-height:1.45;color:${S.mutedOnDark};">${esc(d.closerTrainingIntro)}</div>
+      <div style="font-size:58px;font-weight:900;text-transform:uppercase;line-height:1.04;">${esc(d.closerTrainingTitle)}</div>
+      <div style="${S.serif}font-size:26px;line-height:1.45;color:${S.mutedOnDark};">${esc(d.closerTrainingIntro)}</div>
+      ${points.length ? `<div style="display:flex;flex-direction:column;gap:16px;margin-top:6px;">
+        ${points.map((p, i) => `
+          <div style="background:${cardBg};border:1px solid ${cardBorder};border-radius:12px;padding:20px 24px;display:flex;gap:16px;align-items:baseline;">
+            <div style="font-size:17px;font-weight:900;color:${S.accent};flex:none;">0${i + 1}</div>
+            <div style="font-size:20px;font-weight:700;line-height:1.3;">${p}</div>
+          </div>`).join('')}
+      </div>` : ''}
     </div>
-    ${points.length ? `<div style="display:grid;grid-template-columns:repeat(${Math.min(points.length, 3)},1fr);gap:30px;">
-      ${points.map((p, i) => `
-        <div style="background:${cardBg};border:1px solid ${cardBorder};border-radius:14px;padding:34px 30px;display:flex;flex-direction:column;gap:14px;">
-          <div style="font-size:20px;font-weight:900;color:${S.accent};">0${i + 1}</div>
-          <div style="font-size:24px;font-weight:700;line-height:1.3;">${p}</div>
-        </div>`).join('')}
-    </div>` : ''}
+    <div style="flex:0 0 620px;width:620px;height:780px;border-radius:18px;overflow:hidden;">${photo}</div>
   </div>`;
 }
 
@@ -869,6 +875,7 @@ async function saveRecord() {
     p2_weeks: d.p2Weeks, p2_title: d.p2Title, p2_skills: d.p2Skills, p2_checks: d.p2Checks,
     p3_weeks: d.p3Weeks, p3_title: d.p3Title, p3_skills: d.p3Skills, p3_checks: d.p3Checks,
     closer_training_title: d.closerTrainingTitle, closer_training_intro: d.closerTrainingIntro, closer_training_points: d.closerTrainingPoints,
+    closer_training_photo_url: d.closerTrainingPhotoUrl || '',
     platform_name: d.platformName,
     feature1: d.feature1, feature2: d.feature2, feature3: d.feature3,
     feature4: d.feature4, feature5: d.feature5, feature6: d.feature6,
@@ -902,7 +909,10 @@ async function uploadImage(imageId, file) {
 
   const { data: { publicUrl } } = db.storage.from('pitch-deck-images').getPublicUrl(path);
 
-  const urlKey = imageId === 'founder' ? 'founderPhotoUrl' : imageId === 'showcase' ? 'showcaseImageUrl' : 'bonusPhotoUrl';
+  const urlKey = imageId === 'founder' ? 'founderPhotoUrl'
+    : imageId === 'showcase' ? 'showcaseImageUrl'
+    : imageId === 'closerTraining' ? 'closerTrainingPhotoUrl'
+    : 'bonusPhotoUrl';
   state.data[urlKey] = publicUrl;
 
   const preview = document.getElementById(`${imageId}-preview`);
@@ -1011,7 +1021,7 @@ function attachFormListeners() {
     });
   });
 
-  ['founder', 'showcase', 'bonus'].forEach(imageId => {
+  ['founder', 'showcase', 'closerTraining', 'bonus'].forEach(imageId => {
     const btn = document.getElementById(`${imageId}-upload-btn`);
     const fileInput = document.getElementById(`${imageId}-file-input`);
     if (btn && fileInput) {
@@ -1075,6 +1085,7 @@ async function init() {
     closerTrainingTitle: record.closer_training_title || '',
     closerTrainingIntro: record.closer_training_intro || '',
     closerTrainingPoints: record.closer_training_points || '',
+    closerTrainingPhotoUrl: record.closer_training_photo_url || '',
     platformName: record.platform_name || '',
     feature1: record.feature1 || '', feature2: record.feature2 || '', feature3: record.feature3 || '',
     feature4: record.feature4 || '', feature5: record.feature5 || '', feature6: record.feature6 || '',
