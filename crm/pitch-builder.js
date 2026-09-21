@@ -508,44 +508,83 @@ function computeSlides() {
   ];
 }
 
-// ─── Presenter notes (mirrors computeSlides() order exactly) ──
-function computeNotes(d) {
+// ─── The script (single source of truth for both the Script tab
+//     and the Presenter Notes window — same wording, same blocks) ──
+function computeScript(d) {
   const items = [d.platformName, d.feature1, d.feature2, d.feature3, d.feature4, d.feature5, d.feature6]
     .filter(t => String(t || '').trim());
-
-  let featureNotes = items.map((t, i) => ({
-    label: `Value ${i + 1}`,
-    note: `Reveal: “${t}.”`,
-    cue: i === items.length - 1
-      ? 'After this reveal, ask: “Which of these is the biggest game-changer for you?”'
-      : 'Explain what this does for THEM specifically — tie it to their discovery answers. Don’t dump the whole list at once.'
-  }));
-  if (!featureNotes.length) featureNotes = [{ label: 'Value stack', note: 'Walk through what’s included.', cue: '' }];
-
-  const beforeShowcase = featureNotes.slice(0, 5);
-  const afterShowcase = featureNotes.slice(5);
-  if (beforeShowcase.length) {
-    beforeShowcase[beforeShowcase.length - 1].cue = 'Then say: “Let me show you exactly what this looks like.”';
-  }
+  let featureLabels = items.map((_, i) => `Value ${i + 1}`);
+  if (!featureLabels.length) featureLabels = ['Value stack'];
+  const beforeLabels = featureLabels.slice(0, 5);
+  const afterLabels = featureLabels.slice(5);
 
   return [
-    { label: '01 Hook', note: `“${d.programName} is not just ${d.category}. It’s bigger than that: ${d.movement}”`, cue: 'Pause after the movement line. Then: “By the end of this call, you’ll know whether this is right for you — fair enough?”' },
-    { label: '02 Movement', note: d.movement, cue: 'Let it land. Don’t rush into the next slide.' },
-    { label: '03 Proof', note: 'Walk each stat slowly, one at a time. The numbers do the selling.', cue: 'Discovery question: “Out of curiosity — what made YOU decide now was the time to look at this?”' },
-    { label: '04 Founder', note: `Tell ${d.founderName}'s story in your own words, in order — where they started, what they built, why they built this.`, cue: 'Close the story by tying it back to why this was built for someone exactly like your prospect.' },
-    { label: '05 How It Works', note: `“So how does ${d.programName} actually work? Let me walk you through it step by step.”`, cue: '' },
-    { label: '06 Roadmap', note: 'Walk each phase in order, pause after each, and connect it to what they told you in discovery.', cue: 'Commitment question: “Which phase are you most excited to master?”' },
-    { label: '07 Finish Line', note: 'Slow down here — this is where they see their future self.', cue: '' },
-    ...beforeShowcase,
-    { label: 'Software Showcase', note: `“${d.showcaseTitle}” ${d.showcaseDesc}`, cue: 'Say it once, pause. Let the screen do the work — don’t oversell it.' },
-    ...afterShowcase,
-    { label: 'The Claim', note: `“${d.boldClaim}”`, cue: 'Say it like a fact, because it is. Then silence.' },
-    { label: 'The Promise', note: `“${d.promiseTitle}” ${d.promise}`, cue: 'Drop the pitch voice. Read this like you mean it — this is the emotional peak of the call.' },
-    { label: 'The Bonus', note: `${d.bonusName}: ${d.bonusDesc}`, cue: 'Frame this as the unfair advantage — the reason there’s no comparison shopping.' },
-    { label: 'The Bonus (showcase)', note: d.bonusExpandedDesc, cue: '' },
-    { label: 'Packages', note: `Present ${d.pkg1Name} at ${d.pkg1Price}, then ${d.pkg2Name} at ${d.pkg2Price}. Recommend the one that’s genuinely right for them — then stop talking.`, cue: 'First one to speak loses.' },
-    { label: 'Day One', note: `“${d.closerLine}”`, cue: 'Pause. Then: “So which is it for you?”' },
-    ...(d.showTodayPricing !== false ? [{ label: 'Close Today', note: `If they’re ready to decide today, reveal the today-only pricing: ${d.pkg1Today} and ${d.pkg2Today}.`, cue: 'Roll every objection back to their own reasons. Don’t end the call without a decision — yes or no, never maybe.' }] : [])
+    {
+      slides: ['01 Hook', '02 Movement'],
+      heading: 'Slides 1–2 · The hook',
+      body: `“Welcome in — I’m SO glad you’re here. Before we look at anything, I need you to understand what this actually is. ${esc(d.programName)} is not just ${esc(d.category)}. It’s bigger than that. ${esc(d.movement)}”`,
+      cue: 'Pause after the movement line. Then: “By the end of this call, you’ll know whether this is YOUR movement — fair enough?”'
+    },
+    {
+      slides: ['03 Proof'],
+      heading: 'Slide 3 · The proof',
+      body: '“This isn’t a theory. It’s already happening.” Walk each number slowly — one at a time. The numbers do the selling; you just deliver them.',
+      cue: 'Discovery question: “Out of curiosity — what made YOU decide now was the time to look at this?”'
+    },
+    {
+      slides: ['04 Founder'],
+      heading: 'Slide 4 · The founder',
+      body: `“So who’s behind this? Let me tell you about ${esc(d.founderName)}.” Tell the story in your own words — hit the three beats on the slide, in order: where they started, what they built, why they built this.`,
+      cue: 'Close the story by tying it back to why this was built for someone exactly like your prospect.'
+    },
+    {
+      slides: ['05 How It Works', '06 Roadmap', '07 Finish Line'],
+      heading: 'Slides 5–7 · The roadmap',
+      body: `“So how does ${esc(d.programName)} actually work? Let me walk you through it step by step — this is the exact path.” Walk each phase, pause after each one, and connect it to what they told you in discovery. Slow down on the finish line — that’s where they see their future self.`,
+      cue: 'Commitment question: “Which phase are you most excited to master?”'
+    },
+    {
+      slides: beforeLabels,
+      heading: 'Slides 8–12 · The value stack (part 1)',
+      body: `“Now — here’s everything you get inside.” Build the value ONE piece at a time, one slide per reveal, starting with ${esc(d.platformName)}. Name the new item, explain what it does for THEM, and tie it back to their discovery answers. Never dump the whole list at once.`,
+      cue: `After revealing ${esc(d.feature4)}: “Let me show you exactly what this looks like.”`
+    },
+    {
+      slides: ['Software Showcase'],
+      heading: 'Slide 13 · Software showcase',
+      body: `“${esc(d.showcaseTitle)}” Walk the screen. “${esc(d.showcaseDesc)}”`,
+      cue: 'Say it once, pause. Don’t oversell — the screen does the work.'
+    },
+    {
+      slides: afterLabels,
+      heading: 'Slides 14–15 · The value stack (part 2)',
+      body: `Reveal ${esc(d.feature5)}, then the final piece, ${esc(d.feature6)}.`,
+      cue: 'After the last reveal: “Which of these is the biggest game-changer for you?”'
+    },
+    {
+      slides: ['The Claim', 'The Promise'],
+      heading: 'The claim + the promise',
+      body: `“${esc(d.boldClaim)}” — say it like a fact, because it is. Then silence. On the promise slide, drop the pitch voice entirely: “${esc(d.promiseTitle)}” — and read the promise like you mean it. This is the emotional peak of the call.`,
+      cue: ''
+    },
+    {
+      slides: ['The Bonus', 'The Bonus (showcase)'],
+      heading: `The bonus · ${esc(d.bonusName)}`,
+      body: `“And here’s the part nobody else can give you.” Frame ${esc(d.bonusName)} as the unfair advantage — the reason there is no comparison shopping. ${esc(d.bonusDesc)} Then show the screen: “${esc(d.bonusExpandedDesc)}”`,
+      cue: ''
+    },
+    {
+      slides: ['Packages'],
+      heading: 'Packages · The offer',
+      body: `“So here’s how you can start.” Present ${esc(d.pkg1Name)} at ${esc(d.pkg1Price)}, then ${esc(d.pkg2Name)} at ${esc(d.pkg2Price)}. Recommend the one that’s genuinely right for them — then stop talking.`,
+      cue: 'First one to speak loses.'
+    },
+    {
+      slides: ['Day One', 'Close Today'],
+      heading: 'The close',
+      body: `“${esc(d.closerLine)}” Pause. “So which is it for you?” If they’re ready to decide today, reveal the today-only pricing: ${esc(d.pkg1Today)} and ${esc(d.pkg2Today)}. Handle smokescreens, roll every objection back to their own reasons, and do not end the call without a decision — yes or no, never maybe.`,
+      cue: ''
+    }
   ];
 }
 
@@ -561,21 +600,27 @@ function getPresenterChannel() {
   return presenterChannel;
 }
 
+function findScriptBlock(script, slideLabel) {
+  return script.find(block => block.slides.includes(slideLabel));
+}
+
 function broadcastPresenterNotes() {
   const channel = getPresenterChannel();
   if (!channel) return;
   const slides = computeSlides();
-  const notes = computeNotes(state.data);
+  const script = computeScript(state.data);
   const i = state.slideIndex;
+  const current = slides[i] ? findScriptBlock(script, slides[i].label) : null;
+  const next = slides[i + 1] ? findScriptBlock(script, slides[i + 1].label) : null;
   channel.postMessage({
     type: 'update',
     index: i,
     total: slides.length,
     slideLabel: slides[i] ? slides[i].label : '',
-    note: notes[i] ? notes[i].note : '',
-    cue: notes[i] ? notes[i].cue : '',
+    note: current ? current.body : '',
+    cue: current ? current.cue : '',
     nextLabel: slides[i + 1] ? slides[i + 1].label : '',
-    nextNote: notes[i + 1] ? notes[i + 1].note : ''
+    nextNote: next ? next.body : ''
   });
 }
 
@@ -621,64 +666,19 @@ function renderScript() {
   const el = document.getElementById('scriptContent');
   if (!el) return;
   const d = state.data;
+  const script = computeScript(d);
 
   el.innerHTML = `
     <div style="font-size:13px;font-weight:700;letter-spacing:0.26em;text-transform:uppercase;color:#A08256;margin-bottom:14px;">The talk track</div>
     <h1 style="font-size:52px;font-weight:900;text-transform:uppercase;line-height:1;margin:0 0 10px;font-family:Archivo,sans-serif;">${esc(d.programName)}</h1>
-    <p style="font-family:'Instrument Serif',serif;font-style:italic;font-size:24px;color:#6E655C;margin:0 0 56px;">Pitch script — question-based selling, one decision per slide.</p>
+    <p style="font-family:'Instrument Serif',serif;font-style:italic;font-size:24px;color:#6E655C;margin:0 0 56px;">Pitch script — question-based selling, one decision per slide. This same text powers Presenter Notes.</p>
     <div style="display:flex;flex-direction:column;gap:44px;">
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">Slides 1–2 · The hook</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“Welcome in — I’m SO glad you’re here. Before we look at anything, I need you to understand what this actually is. ${esc(d.programName)} is not just ${esc(d.category)}. It’s bigger than that. ${esc(d.movement)}”</p>
-        <p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">Pause after the movement line. Then: “By the end of this call, you’ll know whether this is YOUR movement — fair enough?”</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">Slide 3 · The proof</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“This isn’t a theory. It’s already happening.” Walk each number slowly — one at a time. The numbers do the selling; you just deliver them.</p>
-        <p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">Discovery question: “Out of curiosity — what made YOU decide now was the time to look at this?”</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">Slide 4 · The founder</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“So who’s behind this? Let me tell you about ${esc(d.founderName)}.” Tell the story in your own words — hit the three beats on the slide, in order: where she started, what she built, why she built this.</p>
-        <p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">Close the story with: “She built this for women exactly like you.”</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">Slides 5–7 · The roadmap</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“So how does ${esc(d.programName)} actually work? Let me walk you through it step by step — this is the exact path.” Walk each phase, pause after each one, and connect it to what she told you in discovery. Slow down on the finish line — that’s where she sees her future self.</p>
-        <p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">Commitment question: “Which phase are you most excited to master?”</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">Slides 8–12 · The value stack (part 1)</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“Now — here’s everything you get inside.” Build the value ONE piece at a time, one slide per reveal, starting with ${esc(d.platformName)}. Name the new item, explain what it does for HER, and tie it back to her discovery answers. Never dump the whole list at once.</p>
-        <p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">After revealing ${esc(d.feature4)}: “Let me show you exactly what this looks like.”</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">Slide 13 · Software showcase</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“${esc(d.showcaseTitle)}” Walk the screen. “${esc(d.showcaseDesc)}”</p>
-        <p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">Say it once, pause. Don’t oversell — the screen does the work.</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">Slides 14–15 · The value stack (part 2)</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">Reveal ${esc(d.feature5)}, then the final piece, ${esc(d.feature6)}.</p>
-        <p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">After the last reveal: “Which of these is the biggest game-changer for you?”</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">The claim + the promise</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“${esc(d.boldClaim)}” — say it like a fact, because it is. Then silence. On the promise slide, drop the pitch voice entirely: “${esc(d.promiseTitle)}” — and read the promise like you mean it. This is the emotional peak of the call.</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">The bonus · ${esc(d.bonusName)}</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“And here’s the part nobody else can give you.” Frame ${esc(d.bonusName)} as the unfair advantage — the reason there is no comparison shopping. ${esc(d.bonusDesc)} Then show the screen: “${esc(d.bonusExpandedDesc)}”</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">Packages · The offer</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“So here’s how you can start.” Present ${esc(d.pkg1Name)} at ${esc(d.pkg1Price)}, then ${esc(d.pkg2Name)} at ${esc(d.pkg2Price)}. Recommend the one that’s genuinely right for her — then stop talking.</p>
-        <p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">First one to speak loses.</p>
-      </div>
-      <div style="border-top:2px solid #14100E;padding-top:22px;">
-        <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">The close</div>
-        <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">“${esc(d.closerLine)}” Pause. “So which is it for you?” If she’s ready to decide today, reveal the today-only pricing: ${esc(d.pkg1Today)} and ${esc(d.pkg2Today)}. Handle smokescreens, roll every objection back to her own reasons, and do not end the call without a decision — yes or no, never maybe.</p>
-      </div>
+      ${script.map(block => `
+        <div style="border-top:2px solid #14100E;padding-top:22px;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#A08256;margin-bottom:12px;">${esc(block.heading)}</div>
+          <p style="font-size:18px;line-height:1.7;margin:0 0 12px;">${block.body}</p>
+          ${block.cue ? `<p style="font-size:15px;line-height:1.6;color:#6E655C;margin:0;font-style:italic;">${block.cue}</p>` : ''}
+        </div>`).join('')}
     </div>`;
 }
 
