@@ -513,17 +513,36 @@ function computeSlides() {
 function computeScript(d) {
   const items = [d.platformName, d.feature1, d.feature2, d.feature3, d.feature4, d.feature5, d.feature6]
     .filter(t => String(t || '').trim());
-  let featureLabels = items.map((_, i) => `Value ${i + 1}`);
-  if (!featureLabels.length) featureLabels = ['Value stack'];
-  const beforeLabels = featureLabels.slice(0, 5);
-  const afterLabels = featureLabels.slice(5);
+  const featureItems = items.length ? items : ['what’s included'];
+  const featureBlocks = featureItems.map((t, i) => ({
+    slides: [i === 0 && items.length ? 'Value 1' : `Value ${i + 1}`],
+    heading: `Slide · Value reveal ${i + 1}`,
+    body: i === 0
+      ? `“Now — here’s everything you get inside.” Start with ${esc(t)}.`
+      : `Reveal “${esc(t)}.” Name it, explain what it does for THEM, and tie it back to their discovery answers. Never dump the whole list at once.`,
+    cue: i === featureItems.length - 1
+      ? 'After this reveal, ask: “Which of these is the biggest game-changer for you?”'
+      : ''
+  }));
+  if (!items.length) featureBlocks[0].slides = ['Value stack'];
+  const beforeBlocks = featureBlocks.slice(0, 5);
+  const afterBlocks = featureBlocks.slice(5);
+  if (beforeBlocks.length) {
+    beforeBlocks[beforeBlocks.length - 1].cue = 'Then say: “Let me show you exactly what this looks like.”';
+  }
 
   return [
     {
-      slides: ['01 Hook', '02 Movement'],
-      heading: 'Slides 1–2 · The hook',
-      body: `“Welcome in — I’m SO glad you’re here. Before we look at anything, I need you to understand what this actually is. ${esc(d.programName)} is not just ${esc(d.category)}. It’s bigger than that. ${esc(d.movement)}”`,
-      cue: 'Pause after the movement line. Then: “By the end of this call, you’ll know whether this is YOUR movement — fair enough?”'
+      slides: ['01 Hook'],
+      heading: 'Slide 1 · The hook',
+      body: `“Welcome in — I’m SO glad you’re here. Before we look at anything, I need you to understand what this actually is. ${esc(d.programName)} is not just ${esc(d.category)}.”`,
+      cue: 'Transition straight into the movement line on the next slide.'
+    },
+    {
+      slides: ['02 Movement'],
+      heading: 'Slide 2 · The movement',
+      body: `“It’s bigger than that. ${esc(d.movement)}”`,
+      cue: 'Pause after this line — let it land. Then: “By the end of this call, you’ll know whether this is YOUR movement — fair enough?”'
     },
     {
       slides: ['03 Proof'],
@@ -538,52 +557,72 @@ function computeScript(d) {
       cue: 'Close the story by tying it back to why this was built for someone exactly like your prospect.'
     },
     {
-      slides: ['05 How It Works', '06 Roadmap', '07 Finish Line'],
-      heading: 'Slides 5–7 · The roadmap',
-      body: `“So how does ${esc(d.programName)} actually work? Let me walk you through it step by step — this is the exact path.” Walk each phase, pause after each one, and connect it to what they told you in discovery. Slow down on the finish line — that’s where they see their future self.`,
+      slides: ['05 How It Works'],
+      heading: 'Slide 5 · How it works',
+      body: `“So how does ${esc(d.programName)} actually work? Let me walk you through it step by step — this is the exact path.”`,
+      cue: 'Transition straight into the roadmap.'
+    },
+    {
+      slides: ['06 Roadmap'],
+      heading: 'Slide 6 · The roadmap',
+      body: 'Walk each phase in order, pause after each one, and connect it to what they told you in discovery.',
       cue: 'Commitment question: “Which phase are you most excited to master?”'
     },
     {
-      slides: beforeLabels,
-      heading: 'Slides 8–12 · The value stack (part 1)',
-      body: `“Now — here’s everything you get inside.” Build the value ONE piece at a time, one slide per reveal, starting with ${esc(d.platformName)}. Name the new item, explain what it does for THEM, and tie it back to their discovery answers. Never dump the whole list at once.`,
-      cue: `After revealing ${esc(d.feature4)}: “Let me show you exactly what this looks like.”`
+      slides: ['07 Finish Line'],
+      heading: 'Slide 7 · The finish line',
+      body: 'Slow down here — this is where they see their future self.',
+      cue: ''
     },
+    ...beforeBlocks,
     {
       slides: ['Software Showcase'],
-      heading: 'Slide 13 · Software showcase',
+      heading: 'Slide · Software showcase',
       body: `“${esc(d.showcaseTitle)}” Walk the screen. “${esc(d.showcaseDesc)}”`,
       cue: 'Say it once, pause. Don’t oversell — the screen does the work.'
     },
+    ...afterBlocks,
     {
-      slides: afterLabels,
-      heading: 'Slides 14–15 · The value stack (part 2)',
-      body: `Reveal ${esc(d.feature5)}, then the final piece, ${esc(d.feature6)}.`,
-      cue: 'After the last reveal: “Which of these is the biggest game-changer for you?”'
+      slides: ['The Claim'],
+      heading: 'Slide · The claim',
+      body: `“${esc(d.boldClaim)}”`,
+      cue: 'Say it like a fact, because it is. Then silence.'
     },
     {
-      slides: ['The Claim', 'The Promise'],
-      heading: 'The claim + the promise',
-      body: `“${esc(d.boldClaim)}” — say it like a fact, because it is. Then silence. On the promise slide, drop the pitch voice entirely: “${esc(d.promiseTitle)}” — and read the promise like you mean it. This is the emotional peak of the call.`,
+      slides: ['The Promise'],
+      heading: 'Slide · The promise',
+      body: `“${esc(d.promiseTitle)}” ${esc(d.promise)}`,
+      cue: 'Drop the pitch voice entirely. Read this like you mean it — this is the emotional peak of the call.'
+    },
+    {
+      slides: ['The Bonus'],
+      heading: 'Slide · The bonus',
+      body: `“And here’s the part nobody else can give you.” Frame ${esc(d.bonusName)} as the unfair advantage — the reason there is no comparison shopping. ${esc(d.bonusDesc)}`,
       cue: ''
     },
     {
-      slides: ['The Bonus', 'The Bonus (showcase)'],
-      heading: `The bonus · ${esc(d.bonusName)}`,
-      body: `“And here’s the part nobody else can give you.” Frame ${esc(d.bonusName)} as the unfair advantage — the reason there is no comparison shopping. ${esc(d.bonusDesc)} Then show the screen: “${esc(d.bonusExpandedDesc)}”`,
+      slides: ['The Bonus (showcase)'],
+      heading: 'Slide · The bonus, in action',
+      body: `Now show the screen: “${esc(d.bonusExpandedDesc)}”`,
       cue: ''
     },
     {
       slides: ['Packages'],
-      heading: 'Packages · The offer',
+      heading: 'Slide · Packages',
       body: `“So here’s how you can start.” Present ${esc(d.pkg1Name)} at ${esc(d.pkg1Price)}, then ${esc(d.pkg2Name)} at ${esc(d.pkg2Price)}. Recommend the one that’s genuinely right for them — then stop talking.`,
       cue: 'First one to speak loses.'
     },
     {
-      slides: ['Day One', 'Close Today'],
-      heading: 'The close',
-      body: `“${esc(d.closerLine)}” Pause. “So which is it for you?” If they’re ready to decide today, reveal the today-only pricing: ${esc(d.pkg1Today)} and ${esc(d.pkg2Today)}. Handle smokescreens, roll every objection back to their own reasons, and do not end the call without a decision — yes or no, never maybe.`,
+      slides: ['Day One'],
+      heading: 'Slide · The close',
+      body: `“${esc(d.closerLine)}” Pause. “So which is it for you?”`,
       cue: ''
+    },
+    {
+      slides: ['Close Today'],
+      heading: 'Slide · Close today pricing',
+      body: `If they’re ready to decide today, reveal the today-only pricing: ${esc(d.pkg1Today)} and ${esc(d.pkg2Today)}.`,
+      cue: 'Handle smokescreens, roll every objection back to their own reasons, and do not end the call without a decision — yes or no, never maybe.'
     }
   ];
 }
