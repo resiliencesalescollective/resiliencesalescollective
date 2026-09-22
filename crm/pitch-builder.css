@@ -142,6 +142,8 @@
   flex: 1;
   min-height: 0;
   display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 /* ── Form pane ── */
@@ -319,7 +321,7 @@ select.pb-field-input {
 /* ── Deck pane ── */
 .pb-deck-pane {
   flex: 1;
-  min-width: 0;
+  min-width: 480px;
   min-height: 0;
   background: #0D0A08;
   display: flex;
