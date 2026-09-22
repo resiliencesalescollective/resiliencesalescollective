@@ -48,6 +48,7 @@ const DEFAULTS = {
   bonusDesc: 'Shelby has gathered the best course and coaching programs in the world across every niche, and built a proprietary software for you to reach them — with the exact scripts and strategies you need to land the exact job you want.',
   bonusExpandedDesc: 'Shelby’s network is obviously huge in the space, and with everyone knowing her as the expert, people always ask her for certified closers. So her team built proprietary software that gives all of her students access to the highest-paying offers in the industry all in one place.',
   bonusPhotoUrl: '',
+  bonusPhotoUrl2: '',
   pkg1Name: 'She Sells Remote',
   pkg1Features: 'Entire training platform\nVideo training modules\nWeekly coaching calls\nActive community support & accountability',
   pkg1Price: '$2,997', pkg1Today: '$2,497',
@@ -153,7 +154,8 @@ const FORM_SECTIONS = [
     { key: 'bonusName', label: 'Bonus asset name', type: 'input' },
     { key: 'bonusDesc', label: 'What it does for her (intro slide, no image)', type: 'textarea', rows: 4 },
     { key: 'bonusExpandedDesc', label: 'The full story (screenshot slide)', type: 'textarea', rows: 4 },
-    { key: 'bonusPhotoUrl', label: 'Bonus screenshot', type: 'image', imageId: 'bonus' }
+    { key: 'bonusPhotoUrl', label: 'Bonus screenshot — top', type: 'image', imageId: 'bonus' },
+    { key: 'bonusPhotoUrl2', label: 'Bonus screenshot — bottom', type: 'image', imageId: 'bonus2' }
   ]},
   { num: '10', title: 'Packages & close', fields: [
     { key: 'pkg1Name', label: 'Package 1 · name', type: 'input' },
@@ -382,15 +384,18 @@ function slideBonusIntro(d) {
 }
 
 function slideBonusShowcase(d) {
-  const photo = d.bonusPhotoUrl
-    ? `<img src="${esc(d.bonusPhotoUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:18px;" alt="">`
-    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${S.placeholderBg};font-size:28px;font-family:${S.headingFont};color:${S.hint};border-radius:18px;">Bonus screenshot</div>`;
+  const photoBox = (url, label) => url
+    ? `<img src="${esc(url)}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" alt="">`
+    : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${S.placeholderBg};font-size:20px;font-family:${S.headingFont};color:${S.hint};border-radius:16px;">${label}</div>`;
   return `<div style="${S.ivory}padding:100px 130px;display:flex;gap:90px;align-items:center;">
     <div style="flex:1;display:flex;flex-direction:column;gap:34px;">
       <div style="${S.eyebrow}">${esc(d.bonusName)}</div>
       <div style="font-size:31px;line-height:1.5;color:${S.bodyOnLight};">${esc(d.bonusExpandedDesc)}</div>
     </div>
-    <div style="flex:1;height:760px;">${photo}</div>
+    <div style="flex:1;height:760px;display:flex;flex-direction:column;gap:24px;">
+      <div style="flex:1;min-height:0;">${photoBox(d.bonusPhotoUrl, 'Bonus screenshot — top')}</div>
+      <div style="flex:1;min-height:0;">${photoBox(d.bonusPhotoUrl2, 'Bonus screenshot — bottom')}</div>
+    </div>
   </div>`;
 }
 
@@ -975,6 +980,7 @@ async function saveRecord() {
     showcase_title: d.showcaseTitle, showcase_desc: d.showcaseDesc, showcase_image_url: d.showcaseImageUrl || '',
     bold_claim: d.boldClaim, promise_title: d.promiseTitle, promise: d.promise,
     bonus_name: d.bonusName, bonus_desc: d.bonusDesc, bonus_expanded_desc: d.bonusExpandedDesc, bonus_photo_url: d.bonusPhotoUrl || '',
+    bonus_photo_url_2: d.bonusPhotoUrl2 || '',
     pkg1_name: d.pkg1Name, pkg1_features: d.pkg1Features, pkg1_price: d.pkg1Price, pkg1_today: d.pkg1Today,
     pkg2_name: d.pkg2Name, pkg2_features: d.pkg2Features, pkg2_price: d.pkg2Price, pkg2_today: d.pkg2Today,
     closer_line: d.closerLine
@@ -1005,6 +1011,7 @@ async function uploadImage(imageId, file) {
   const urlKey = imageId === 'founder' ? 'founderPhotoUrl'
     : imageId === 'showcase' ? 'showcaseImageUrl'
     : imageId === 'closerTraining' ? 'closerTrainingPhotoUrl'
+    : imageId === 'bonus2' ? 'bonusPhotoUrl2'
     : 'bonusPhotoUrl';
   state.data[urlKey] = publicUrl;
 
@@ -1114,7 +1121,7 @@ function attachFormListeners() {
     });
   });
 
-  ['founder', 'showcase', 'closerTraining', 'bonus'].forEach(imageId => {
+  ['founder', 'showcase', 'closerTraining', 'bonus', 'bonus2'].forEach(imageId => {
     const btn = document.getElementById(`${imageId}-upload-btn`);
     const fileInput = document.getElementById(`${imageId}-file-input`);
     if (btn && fileInput) {
@@ -1193,6 +1200,7 @@ async function init() {
     bonusDesc: record.bonus_desc || '',
     bonusExpandedDesc: record.bonus_expanded_desc || '',
     bonusPhotoUrl: record.bonus_photo_url || '',
+    bonusPhotoUrl2: record.bonus_photo_url_2 || '',
     pkg1Name: record.pkg1_name || '', pkg1Features: record.pkg1_features || '',
     pkg1Price: record.pkg1_price || '', pkg1Today: record.pkg1_today || '',
     pkg2Name: record.pkg2_name || '', pkg2Features: record.pkg2_features || '',
