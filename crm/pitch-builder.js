@@ -4,6 +4,7 @@
 
 // ─── Default example data (from design spec) ────────────────
 const DEFAULTS = {
+  scriptOverrides: {}, // keyed by slide label — lets the presenter edit notes directly
   brandDark: '#14100E',
   brandLight: '#F3EDE3',
   brandAccent: '#A08256',
@@ -557,7 +558,7 @@ function computeScript(d) {
   const beforeBlocks = featureBlocks.slice(0, 5);
   const afterBlocks = featureBlocks.slice(5);
 
-  return [
+  const script = [
     {
       slides: ['01 Hook'],
       heading: 'Slide 1 · The hook',
@@ -651,6 +652,14 @@ function computeScript(d) {
       cue: 'Then stop talking. First one to speak loses.'
     }
   ];
+
+  // Apply any manual edits made directly in Presenter Notes, keyed by slide label.
+  const overrides = d.scriptOverrides || {};
+  return script.map(block => {
+    const o = overrides[block.slides[0]];
+    if (!o) return block;
+    return { ...block, body: o.body != null ? o.body : block.body, cue: o.cue != null ? o.cue : block.cue };
+  });
 }
 
 // ─── Presenter notes window ─────────────────────────────────────
@@ -682,6 +691,17 @@ function handleNavMessage(data) {
   presenterNavigate(data.dir);
 }
 
+let lastOverrideId = null;
+function handleSaveOverrideMessage(data) {
+  if (!data || data.type !== 'saveOverride') return;
+  if (data.id && data.id === lastOverrideId) return;
+  if (data.id) lastOverrideId = data.id;
+  if (!state.data.scriptOverrides) state.data.scriptOverrides = {};
+  state.data.scriptOverrides[data.slideLabel] = { body: data.body, cue: data.cue };
+  scheduleSave();
+  render();
+}
+
 function getPresenterChannel() {
   if (presenterChannel || !state.recordId || typeof BroadcastChannel === 'undefined') return presenterChannel;
   try {
@@ -690,6 +710,7 @@ function getPresenterChannel() {
       if (!e.data) return;
       if (e.data.type === 'ready') broadcastPresenterNotes();
       if (e.data.type === 'nav') handleNavMessage(e.data);
+      if (e.data.type === 'saveOverride') handleSaveOverrideMessage(e.data);
     });
   } catch (err) { /* BroadcastChannel unavailable — other channels still work */ }
   return presenterChannel;
@@ -703,6 +724,7 @@ function ensurePresenterListener() {
     if (e.origin !== window.location.origin || !e.data) return;
     if (e.data.type === 'ready') broadcastPresenterNotes();
     if (e.data.type === 'nav') handleNavMessage(e.data);
+    if (e.data.type === 'saveOverride') handleSaveOverrideMessage(e.data);
   });
 }
 
@@ -935,6 +957,7 @@ async function saveRecord() {
   const d = state.data;
   const { error } = await db.from('pitch_decks').update({
     client_name: d.programName || 'Untitled Pitch',
+    script_overrides: JSON.stringify(d.scriptOverrides || {}),
     brand_dark: d.brandDark, brand_light: d.brandLight, brand_accent: d.brandAccent,
     heading_font: d.headingFont, accent_font: d.accentFont,
     program_name: d.programName, category: d.category, movement: d.movement,
@@ -1132,7 +1155,10 @@ async function init() {
   }
 
   // Map DB snake_case → camelCase
+  let scriptOverrides = {};
+  try { scriptOverrides = record.script_overrides ? JSON.parse(record.script_overrides) : {}; } catch (err) { scriptOverrides = {}; }
   state.data = {
+    scriptOverrides,
     brandDark: record.brand_dark || '#14100E',
     brandLight: record.brand_light || '#F3EDE3',
     brandAccent: record.brand_accent || '#A08256',

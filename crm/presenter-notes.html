@@ -96,6 +96,41 @@
       max-width: 340px;
     }
     .waiting b { color: #A79C90; }
+    .edit-btn {
+      font: 600 10.5px Archivo, sans-serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #6E655C;
+      background: none;
+      border: 1px solid #2C2620;
+      border-radius: 6px;
+      padding: 5px 10px;
+      cursor: pointer;
+      margin-top: 18px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .edit-btn:hover { color: #F3EDE3; border-color: #6E655C; }
+    .edit-area {
+      width: 100%;
+      font: 400 17px Archivo, sans-serif;
+      line-height: 1.5;
+      color: #F3EDE3;
+      background: #1B1714;
+      border: 1px solid #3A342F;
+      border-radius: 8px;
+      padding: 12px 14px;
+      resize: vertical;
+      outline: none;
+    }
+    .edit-area:focus { border-color: #A08256; }
+    .edit-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #6E655C;
+      margin-bottom: 6px;
+    }
     .nav-row {
       flex: none;
       display: flex;
@@ -145,27 +180,63 @@
     try { channel = new BroadcastChannel('pitch-presenter-' + deckId); } catch (err) { /* unavailable — other channels still work */ }
 
     let current = null;
+    let editing = false;
 
     // Called directly by the main window if it can reach us that way.
     function receiveUpdate(msg) { render(msg); }
 
     function render(msg) {
+      const changedSlide = !current || current.slideLabel !== msg.slideLabel;
+      const wasEditingSameSlide = editing && !changedSlide;
       current = msg;
+      if (changedSlide) editing = false; // don't carry edit mode across slides
+
       const waitingEl = document.getElementById('waiting');
       if (waitingEl) waitingEl.style.display = 'none';
       document.getElementById('navRow').style.display = 'flex';
       document.getElementById('counter').textContent = (msg.index + 1) + ' / ' + msg.total;
-
-      const main = document.getElementById('main');
-      main.innerHTML = `
-        <div>
-          <div class="slide-label">${escapeHtml(msg.slideLabel || '')}</div>
-          <div class="note-text">${escapeHtml(msg.note || '')}</div>
-          ${msg.cue ? `<div class="cue">${escapeHtml(msg.cue)}</div>` : ''}
-        </div>`;
-
       document.getElementById('prevBtn').disabled = msg.index <= 0;
       document.getElementById('nextBtn').disabled = msg.index >= msg.total - 1;
+
+      // Don't rebuild the textareas out from under an active edit — the
+      // echo-back of our own save would otherwise reset the cursor mid-typing.
+      if (wasEditingSameSlide) return;
+
+      const main = document.getElementById('main');
+      if (editing) {
+        main.innerHTML = `
+          <div>
+            <div class="slide-label">${escapeHtml(msg.slideLabel || '')}</div>
+            <div class="edit-label">Notes</div>
+            <textarea class="edit-area" id="editNote" rows="8">${escapeHtml(msg.note || '')}</textarea>
+            <div class="edit-label" style="margin-top:14px;">Coaching cue (italic line, optional)</div>
+            <textarea class="edit-area" id="editCue" rows="2">${escapeHtml(msg.cue || '')}</textarea>
+            <button class="edit-btn" id="doneEditBtn">Done editing</button>
+          </div>`;
+        document.getElementById('doneEditBtn').addEventListener('click', () => { editing = false; render(current); });
+        document.getElementById('editNote').addEventListener('input', scheduleSaveOverride);
+        document.getElementById('editCue').addEventListener('input', scheduleSaveOverride);
+      } else {
+        main.innerHTML = `
+          <div>
+            <div class="slide-label">${escapeHtml(msg.slideLabel || '')}</div>
+            <div class="note-text">${escapeHtml(msg.note || '')}</div>
+            ${msg.cue ? `<div class="cue">${escapeHtml(msg.cue)}</div>` : ''}
+            <button class="edit-btn" id="editBtn">✎ Edit these notes</button>
+          </div>`;
+        document.getElementById('editBtn').addEventListener('click', () => { editing = true; render(current); });
+      }
+    }
+
+    let saveOverrideTimer = null;
+    function scheduleSaveOverride() {
+      clearTimeout(saveOverrideTimer);
+      saveOverrideTimer = setTimeout(() => {
+        if (!current) return;
+        const body = document.getElementById('editNote').value;
+        const cue = document.getElementById('editCue').value;
+        send({ type: 'saveOverride', slideLabel: current.slideLabel, body, cue, id: Date.now() + '-' + Math.random() });
+      }, 500);
     }
 
     function escapeHtml(s) {
@@ -179,6 +250,7 @@
       if (window.opener && !window.opener.closed) {
         try { window.opener.postMessage(msg, window.location.origin); } catch (err) {}
         try { if (typeof window.opener.handleNavMessage === 'function' && msg.type === 'nav') window.opener.handleNavMessage(msg); } catch (err) {}
+        try { if (typeof window.opener.handleSaveOverrideMessage === 'function' && msg.type === 'saveOverride') window.opener.handleSaveOverrideMessage(msg); } catch (err) {}
       }
     }
 
