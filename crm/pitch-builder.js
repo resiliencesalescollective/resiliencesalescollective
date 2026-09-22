@@ -654,14 +654,13 @@ function computeScript(d) {
 }
 
 // ─── Presenter notes window ─────────────────────────────────────
-// Primary sync path is a direct reference to the popup window (and its
-// reference back to us via window.opener) — this is a same-origin
-// synchronous call, not a pub/sub message, so it isn't subject to the
-// delivery delays BroadcastChannel can have for an unfocused/background
-// tab. BroadcastChannel is kept only as a fallback for edge cases where
-// the direct window reference isn't available.
+// Sync uses window.postMessage — the standard mechanism browsers use for
+// opener/popup communication. Unlike a direct property call into the other
+// window (which Safari can block under some privacy settings) or
+// BroadcastChannel (which can lag for a backgrounded tab), postMessage is
+// what popups are actually built to talk to their opener through.
 let presenterWin = null;
-let presenterChannel = null;
+let presenterListenerAttached = false;
 
 function presenterNavigate(dir) {
   const total = computeSlides().length;
@@ -670,15 +669,14 @@ function presenterNavigate(dir) {
   render();
 }
 
-function getPresenterChannel() {
-  if (presenterChannel || !state.recordId || typeof BroadcastChannel === 'undefined') return presenterChannel;
-  presenterChannel = new BroadcastChannel('pitch-presenter-' + state.recordId);
-  presenterChannel.addEventListener('message', e => {
-    if (!e.data) return;
+function ensurePresenterListener() {
+  if (presenterListenerAttached) return;
+  presenterListenerAttached = true;
+  window.addEventListener('message', e => {
+    if (e.origin !== window.location.origin || !e.data) return;
     if (e.data.type === 'ready') broadcastPresenterNotes();
     if (e.data.type === 'nav') presenterNavigate(e.data.dir);
   });
-  return presenterChannel;
 }
 
 function findScriptBlock(script, slideLabel) {
@@ -686,7 +684,7 @@ function findScriptBlock(script, slideLabel) {
 }
 
 function broadcastPresenterNotes() {
-  const channel = getPresenterChannel();
+  if (!presenterWin || presenterWin.closed) return;
   const slides = computeSlides();
   const script = computeScript(state.data);
   const i = state.slideIndex;
@@ -702,12 +700,7 @@ function broadcastPresenterNotes() {
     nextLabel: slides[i + 1] ? slides[i + 1].label : '',
     nextNote: next ? next.body : ''
   };
-
-  if (presenterWin && !presenterWin.closed && typeof presenterWin.receiveUpdate === 'function') {
-    presenterWin.receiveUpdate(msg);
-  } else if (channel) {
-    channel.postMessage(msg);
-  }
+  presenterWin.postMessage(msg, window.location.origin);
 }
 
 // ─── Render ──────────────────────────────────────────────────
@@ -1166,7 +1159,7 @@ async function init() {
 
   // Presenter notes — opens a private notes window for the closer's own screen
   document.getElementById('presenterNotesBtn').addEventListener('click', () => {
-    getPresenterChannel();
+    ensurePresenterListener();
     presenterWin = window.open(
       `presenter-notes.html?id=${state.recordId}`,
       'presenterNotes_' + state.recordId,
