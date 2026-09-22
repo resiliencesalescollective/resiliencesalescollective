@@ -259,7 +259,7 @@ function slideFounder(d) {
   const photo = d.founderPhotoUrl
     ? `<img src="${esc(d.founderPhotoUrl)}" style="width:100%;height:100%;object-fit:cover;" alt="">`
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${S.placeholderBg};font-size:28px;font-family:${S.headingFont};color:${S.hint};border-radius:18px;">Founder photo</div>`;
-  return `<div style="${S.ivory}padding:90px 110px;display:flex;gap:80px;align-items:center;overflow:hidden;">
+  return `<div style="${S.ivory}padding:70px 80px;display:flex;gap:60px;align-items:center;overflow:hidden;">
     <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:30px;">
       <div style="${S.eyebrow}">Meet the founder</div>
       <div style="font-size:76px;font-weight:900;text-transform:uppercase;line-height:0.98;">Who is <span style="${S.serif}font-weight:400;text-transform:none;">${esc(d.founderName)}</span>?</div>
@@ -267,7 +267,7 @@ function slideFounder(d) {
         ${storyLines.map(l => `<div style="font-size:26px;line-height:1.4;color:${S.bodyOnLight};border-left:4px solid ${S.accent};padding-left:24px;">${esc(l)}</div>`).join('')}
       </div>
     </div>
-    <div style="flex:0 0 620px;width:620px;height:780px;border-radius:28px;overflow:hidden;">${photo}</div>
+    <div style="flex:0 0 760px;width:760px;height:950px;border-radius:28px;overflow:hidden;">${photo}</div>
   </div>`;
 }
 
