@@ -133,17 +133,10 @@
     </div>
   </main>
 
-  <div class="next-block" id="nextBlock" style="display:none;">
-    <div class="next-label">Up next</div>
-    <div class="next-text" id="nextText">—</div>
-  </div>
-
   <div class="nav-row" id="navRow" style="display:none;">
     <button class="nav-btn" id="prevBtn">← Back</button>
     <button class="nav-btn" id="nextBtn">Next →</button>
   </div>
-
-  <div id="debugBar" style="font:11px monospace;color:#6E655C;padding:8px 22px;border-top:1px solid #2C2620;white-space:pre-line;"></div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -151,25 +144,15 @@
     let channel = null;
     try { channel = new BroadcastChannel('pitch-presenter-' + deckId); } catch (err) { /* unavailable — other channels still work */ }
 
-    const debugLines = [];
-    function log(line) {
-      debugLines.push(new Date().toLocaleTimeString() + '  ' + line);
-      while (debugLines.length > 6) debugLines.shift();
-      const bar = document.getElementById('debugBar');
-      if (bar) bar.textContent = debugLines.join('\n');
-    }
-    log('deckId=' + deckId + ' opener=' + (!!window.opener) + ' channel=' + (!!channel));
-
     let current = null;
 
     // Called directly by the main window if it can reach us that way.
-    function receiveUpdate(msg) { log('received via direct call, index=' + msg.index); render(msg); }
+    function receiveUpdate(msg) { render(msg); }
 
     function render(msg) {
       current = msg;
       const waitingEl = document.getElementById('waiting');
       if (waitingEl) waitingEl.style.display = 'none';
-      document.getElementById('nextBlock').style.display = 'block';
       document.getElementById('navRow').style.display = 'flex';
       document.getElementById('counter').textContent = (msg.index + 1) + ' / ' + msg.total;
 
@@ -180,10 +163,6 @@
           <div class="note-text">${escapeHtml(msg.note || '')}</div>
           ${msg.cue ? `<div class="cue">${escapeHtml(msg.cue)}</div>` : ''}
         </div>`;
-
-      document.getElementById('nextText').textContent = msg.nextLabel
-        ? msg.nextLabel + (msg.nextNote ? ' — ' + msg.nextNote : '')
-        : 'This is the last slide.';
 
       document.getElementById('prevBtn').disabled = msg.index <= 0;
       document.getElementById('nextBtn').disabled = msg.index >= msg.total - 1;
@@ -196,16 +175,11 @@
     // Send on every channel we have — as long as one gets through in this
     // browser's privacy configuration, the main window stays in sync.
     function send(msg) {
-      const results = [];
-      if (channel) { try { channel.postMessage(msg); results.push('bc:ok'); } catch (err) { results.push('bc:FAIL ' + err.message); } }
-      else results.push('bc:none');
+      if (channel) { try { channel.postMessage(msg); } catch (err) {} }
       if (window.opener && !window.opener.closed) {
-        try { window.opener.postMessage(msg, window.location.origin); results.push('pm:ok'); } catch (err) { results.push('pm:FAIL ' + err.message); }
-        try { if (typeof window.opener.presenterNavigate === 'function' && msg.type === 'nav') { window.opener.presenterNavigate(msg.dir); results.push('direct:ok'); } else results.push('direct:n/a'); } catch (err) { results.push('direct:FAIL ' + err.message); }
-      } else {
-        results.push('opener:MISSING');
+        try { window.opener.postMessage(msg, window.location.origin); } catch (err) {}
+        try { if (typeof window.opener.presenterNavigate === 'function' && msg.type === 'nav') window.opener.presenterNavigate(msg.dir); } catch (err) {}
       }
-      log('sent ' + msg.type + (msg.dir ? ':' + msg.dir : '') + '  [' + results.join(', ') + ']');
     }
 
     function goTo(dir) {
@@ -223,12 +197,12 @@
 
     window.addEventListener('message', (e) => {
       if (e.origin !== window.location.origin || !e.data) return;
-      if (e.data.type === 'update') { log('received via postMessage, index=' + e.data.index); render(e.data); }
+      if (e.data.type === 'update') render(e.data);
     });
 
     if (channel) {
       channel.addEventListener('message', (e) => {
-        if (e.data && e.data.type === 'update') { log('received via BroadcastChannel, index=' + e.data.index); render(e.data); }
+        if (e.data && e.data.type === 'update') render(e.data);
       });
     }
 
