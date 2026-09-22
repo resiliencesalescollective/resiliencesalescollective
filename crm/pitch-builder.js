@@ -385,7 +385,7 @@ function slideBonusIntro(d) {
 
 function slideBonusShowcase(d) {
   const photoBox = (url, label) => url
-    ? `<img src="${esc(url)}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" alt="">`
+    ? `<div style="width:100%;height:100%;background:${S.placeholderBg};border-radius:16px;overflow:hidden;"><img src="${esc(url)}" style="width:100%;height:100%;object-fit:contain;" alt=""></div>`
     : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:${S.placeholderBg};font-size:20px;font-family:${S.headingFont};color:${S.hint};border-radius:16px;">${label}</div>`;
   return `<div style="${S.ivory}padding:100px 130px;display:flex;gap:90px;align-items:center;">
     <div style="flex:1;display:flex;flex-direction:column;gap:34px;">
