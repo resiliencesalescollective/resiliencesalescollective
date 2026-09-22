@@ -654,12 +654,13 @@ function computeScript(d) {
 }
 
 // ─── Presenter notes window ─────────────────────────────────────
-// Sync uses window.postMessage — the standard mechanism browsers use for
-// opener/popup communication. Unlike a direct property call into the other
-// window (which Safari can block under some privacy settings) or
-// BroadcastChannel (which can lag for a backgrounded tab), postMessage is
-// what popups are actually built to talk to their opener through.
+// We've seen different Safari privacy configurations silently break
+// different single sync mechanisms (window.opener property access,
+// BroadcastChannel lag on a backgrounded tab). So every message goes out
+// on every channel we have, each wrapped so one failing can't block the
+// others — as long as one gets through, the two windows stay in sync.
 let presenterWin = null;
+let presenterChannel = null;
 let presenterListenerAttached = false;
 
 function presenterNavigate(dir) {
@@ -669,7 +670,21 @@ function presenterNavigate(dir) {
   render();
 }
 
+function getPresenterChannel() {
+  if (presenterChannel || !state.recordId || typeof BroadcastChannel === 'undefined') return presenterChannel;
+  try {
+    presenterChannel = new BroadcastChannel('pitch-presenter-' + state.recordId);
+    presenterChannel.addEventListener('message', e => {
+      if (!e.data) return;
+      if (e.data.type === 'ready') broadcastPresenterNotes();
+      if (e.data.type === 'nav') presenterNavigate(e.data.dir);
+    });
+  } catch (err) { /* BroadcastChannel unavailable — other channels still work */ }
+  return presenterChannel;
+}
+
 function ensurePresenterListener() {
+  getPresenterChannel();
   if (presenterListenerAttached) return;
   presenterListenerAttached = true;
   window.addEventListener('message', e => {
@@ -684,7 +699,7 @@ function findScriptBlock(script, slideLabel) {
 }
 
 function broadcastPresenterNotes() {
-  if (!presenterWin || presenterWin.closed) return;
+  const channel = getPresenterChannel();
   const slides = computeSlides();
   const script = computeScript(state.data);
   const i = state.slideIndex;
@@ -700,7 +715,12 @@ function broadcastPresenterNotes() {
     nextLabel: slides[i + 1] ? slides[i + 1].label : '',
     nextNote: next ? next.body : ''
   };
-  presenterWin.postMessage(msg, window.location.origin);
+
+  if (channel) { try { channel.postMessage(msg); } catch (err) {} }
+  if (presenterWin && !presenterWin.closed) {
+    try { presenterWin.postMessage(msg, window.location.origin); } catch (err) {}
+    try { if (typeof presenterWin.receiveUpdate === 'function') presenterWin.receiveUpdate(msg); } catch (err) {}
+  }
 }
 
 // ─── Render ──────────────────────────────────────────────────

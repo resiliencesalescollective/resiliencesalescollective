@@ -144,7 +144,15 @@
   </div>
 
   <script>
+    const params = new URLSearchParams(window.location.search);
+    const deckId = params.get('id');
+    let channel = null;
+    try { channel = new BroadcastChannel('pitch-presenter-' + deckId); } catch (err) { /* unavailable — other channels still work */ }
+
     let current = null;
+
+    // Called directly by the main window if it can reach us that way.
+    function receiveUpdate(msg) { render(msg); }
 
     function render(msg) {
       current = msg;
@@ -173,11 +181,19 @@
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    // Talk to the main deck window (window.opener) via postMessage — the
-    // standard way a popup and its opener are meant to communicate.
+    // Send on every channel we have — as long as one gets through in this
+    // browser's privacy configuration, the main window stays in sync.
+    function send(msg) {
+      if (channel) { try { channel.postMessage(msg); } catch (err) {} }
+      if (window.opener && !window.opener.closed) {
+        try { window.opener.postMessage(msg, window.location.origin); } catch (err) {}
+        try { if (typeof window.opener.presenterNavigate === 'function' && msg.type === 'nav') window.opener.presenterNavigate(msg.dir); } catch (err) {}
+      }
+    }
+
     function goTo(dir) {
-      if (!current || !window.opener || window.opener.closed) return;
-      window.opener.postMessage({ type: 'nav', dir }, window.location.origin);
+      if (!current) return;
+      send({ type: 'nav', dir });
     }
 
     document.getElementById('prevBtn').addEventListener('click', () => goTo('prev'));
@@ -193,11 +209,15 @@
       if (e.data.type === 'update') render(e.data);
     });
 
+    if (channel) {
+      channel.addEventListener('message', (e) => {
+        if (e.data && e.data.type === 'update') render(e.data);
+      });
+    }
+
     // Ask the presenting window to resend its current slide, in case it was
     // already presenting before this notes window opened.
-    if (window.opener && !window.opener.closed) {
-      window.opener.postMessage({ type: 'ready' }, window.location.origin);
-    }
+    send({ type: 'ready' });
   </script>
 </body>
 </html>
