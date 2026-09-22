@@ -263,6 +263,7 @@
     document.getElementById('nextBtn').addEventListener('click', () => goTo('next'));
 
     document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
       if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') { e.preventDefault(); goTo('next'); }
       else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo('prev'); }
     });
