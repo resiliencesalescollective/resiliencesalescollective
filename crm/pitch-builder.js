@@ -267,7 +267,7 @@ function slideFounder(d) {
         ${storyLines.map(l => `<div style="font-size:26px;line-height:1.4;color:${S.bodyOnLight};border-left:4px solid ${S.accent};padding-left:24px;">${esc(l)}</div>`).join('')}
       </div>
     </div>
-    <div style="flex:0 0 620px;width:620px;height:780px;border-radius:18px;overflow:hidden;">${photo}</div>
+    <div style="flex:0 0 620px;width:620px;height:780px;border-radius:28px;overflow:hidden;">${photo}</div>
   </div>`;
 }
 
