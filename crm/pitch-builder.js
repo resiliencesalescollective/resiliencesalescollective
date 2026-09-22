@@ -508,116 +508,147 @@ function computeSlides() {
 function computeScript(d) {
   const items = [d.platformName, d.feature1, d.feature2, d.feature3, d.feature4, d.feature5, d.feature6]
     .filter(t => String(t || '').trim());
+
+  // Value-reveal scripts, in position order: [platformName, feature1..feature6].
+  // These are RSC's real talk track for each reveal — used when a slide's
+  // position matches; falls back to generic phrasing for any extra items.
+  const valueScripts = [
+    {
+      body: `“And how we’re going to take your sales calls from good to the crème de la crème. This is an investment, right?”\n\n“Yes, and we know that, so this strategy is packed with value that reflects that. It’s not just the system that’s the best part, but...”`,
+      cue: 'Let her answer “this is an investment, right?” before continuing.'
+    },
+    {
+      body: `“The customized pitch deck and script that we briefly touched on previously, that follows our strict, proven sales call structure. It’s the same structure Shelby uses that consistently brings her in $5 million per month. How’s that for proven? And you’ll have these forever, by the way — a copy of both will be sent over for approval after build out, and those are yours to keep. They become an asset. I always say you can either pay for experience with time or money, so it’s nice because now you get 5 years of top 1% sales experience at your fingertips.”\n\n“Also, we schedule weekly support calls on Monday afternoons or Friday mornings. If we were to get you onboarded, which time would work best for you so I can note it in your account?”`,
+      cue: 'Lock in her preferred support-call day on this slide.'
+    },
+    {
+      body: `“Next, a hand-picked closer will be assigned to your account, as I stated before. Fully trained and certified, and vetted thoroughly by myself, so you can ensure the person closing your calls will stop at nothing to get the job done. I only hire closers who will fight for the sale as if it were their own business being presented, as long as the customer is a good fit, of course. Our closers carry the utmost respect for you, your customers, and themselves. The only thing we ask is that you respect our closers and their time by showing up to your weekly support calls, as well as your monthly 1-on-1s, ready to discuss progress and your needs!”`,
+      cue: ''
+    },
+    {
+      body: `“And speaking of monthly 1-on-1s, this is where we gather the data from our CRM app — see what’s working well, if anything needs to be elevated, customers’ main pain points for not closing, and much more. Not only so we can tweak the pitch, but so you have that information to work with in case you want to make changes to your offer, refine your target customer, etc. We’re not only here to make money — we’re here to support you and help you scale with the information we collect.”`,
+      cue: ''
+    },
+    {
+      body: `“As we’re scaling, we’re receiving an influx of applications, and that can push build-out times. So we want to make sure we can accommodate our clients who want to fast-track the process with a priority build out.”`,
+      cue: 'Then say: “Let me show you exactly what this looks like.”'
+    },
+    {
+      body: `“If you’re a perfectionist like myself and you like to be on top of developing information, we also offer daily sales support. You’ll get access to daily communication with your closers and our sales manager as well. I’m definitely not someone who likes to be hands-off when it comes to my baby, so I wanted to make sure I built a system that I would actually want to use. I know some people are like ‘Lord please just do it, take it off my hands!’ But I’m just a little too crazy LOL.”`,
+      cue: ''
+    },
+    {
+      body: `“Last but not least with the sales strategy is access to RSC resources. You’ll get the pitch deck and script as discussed, as well as all the information gathered from our custom CRM app — that I personally built out myself too, but we’ll get into that in just a second.”\n\n“I know this seems like a lot — on the backend there’s obviously a lot included in this — but which part so far makes you the most excited about moving forward? Is it the custom pitch deck and script, is it the sales support, the strategy as a whole? Which one is lighting you up the most?”\n\n“Before we move forward, do you have any questions for me specifically about any of this before I jump into the next thing?”\n\n“Okay, perfect! I know this seems like a lot on the backend, and yes, it is! Our team has spent literally hundreds of thousands of dollars, and works around the clock to make this system the most direct path to success for you. It IS worth it, though, because...”`,
+      cue: 'Let her answer both questions fully before advancing — this is a key buy-in checkpoint.'
+    }
+  ];
+
   const featureItems = items.length ? items : ['what’s included'];
-  const featureBlocks = featureItems.map((t, i) => ({
-    slides: [i === 0 && items.length ? 'Value 1' : `Value ${i + 1}`],
-    heading: `Slide · Value reveal ${i + 1}`,
-    body: i === 0
-      ? `“Now — here’s everything you get inside.” Start with ${esc(t)}.`
-      : `Reveal “${esc(t)}.” Name it, explain what it does for THEM, and tie it back to their discovery answers. Never dump the whole list at once.`,
-    cue: i === featureItems.length - 1
-      ? 'After this reveal, ask: “Which of these is the biggest game-changer for you?”'
-      : ''
-  }));
+  const featureBlocks = featureItems.map((t, i) => {
+    const scripted = valueScripts[i];
+    return {
+      slides: [i === 0 && items.length ? 'Value 1' : `Value ${i + 1}`],
+      heading: `Slide · Value reveal ${i + 1}`,
+      body: scripted ? scripted.body : `Reveal “${esc(t)}.” Name it, explain what it does for THEM, and tie it back to their discovery answers. Never dump the whole list at once.`,
+      cue: scripted ? scripted.cue : ''
+    };
+  });
   if (!items.length) featureBlocks[0].slides = ['Value stack'];
   const beforeBlocks = featureBlocks.slice(0, 5);
   const afterBlocks = featureBlocks.slice(5);
-  if (beforeBlocks.length) {
-    beforeBlocks[beforeBlocks.length - 1].cue = 'Then say: “Let me show you exactly what this looks like.”';
-  }
 
   return [
     {
       slides: ['01 Hook'],
       heading: 'Slide 1 · The hook',
-      body: `“Welcome in — I’m SO glad you’re here. Before we look at anything, I need you to understand what this actually is. ${esc(d.programName)} is not just ${esc(d.category)}.”`,
-      cue: 'Transition straight into the movement line on the next slide.'
+      body: `“Before I show you, I just always like to preface that, yes, ${esc(d.programName)} is the number one high-ticket sales agency for female founders, but that’s not why I’m excited to show you about it, or even why I’m on this call with you right now.”`,
+      cue: ''
     },
     {
       slides: ['02 Movement'],
       heading: 'Slide 2 · The movement',
-      body: `“It’s bigger than that. ${esc(d.movement)}”`,
-      cue: 'Pause after this line — let it land. Then: “By the end of this call, you’ll know whether this is YOUR movement — fair enough?”'
+      body: `“It’s because this isn’t just some sales agency; it’s a premium partnership and scaling vehicle that actually gives women founders the opportunity to focus on elevating their business and scaling to new levels, while having a rock solid, borderline psychotic sales team behind them with the same end goal: to create a better life for women who are ready to reach their full potential. I’ll show you here...”`,
+      cue: ''
     },
     {
       slides: ['03 Proof'],
       heading: 'Slide 3 · The proof',
-      body: '“This isn’t a theory. It’s already happening.” Walk each number slowly — one at a time. The numbers do the selling; you just deliver them.',
-      cue: 'Discovery question: “Out of curiosity — what made YOU decide now was the time to look at this?”'
+      body: `“This is what’s already happening in ${esc(d.programName)}. We’ve closed over 800k in deals thus far over five states, which soon will be nationwide. We’re currently in the process of scaling as well, which is just an insane dream come true!\n\nBeing able to scale businesses is one of the very reasons I created ${esc(d.programName)}. As women, we were literally created to create and grow — to elevate. Some of us do that by creating a family, helping them grow. And some of us take the path of creating a different type of baby: a business.\n\nWe’ve personally helped women founders nationwide from the age of 18, just starting their journey, all the way to the trend setters, 50–60, who just needed a little help freshening up their strategy. So...”`,
+      cue: ''
     },
     {
       slides: ['04 Founder'],
       heading: 'Slide 4 · The founder',
-      body: `“So who’s behind this? Let me tell you about ${esc(d.founderName)}.” Tell the story in your own words — hit the three beats on the slide, in order: where they started, what they built, why they built this.`,
-      cue: 'Close the story by tying it back to why this was built for someone exactly like your prospect.'
+      body: `“Obviously all of this is what makes ${esc(d.programName)} great, but it all started with myself, which you may already know a little bit about — just wanted to give you a quick background recap if not. I always like to know who I’m getting in bed with, ya know what I mean? LOL, so...”\n\n“One thing about me is I’m gonna make sure it’s PERFECT. And I’m probably gonna crash out if it’s not, until it gets reeled in LOL. But...”`,
+      cue: 'Read the slide as you talk through it.'
     },
     {
       slides: ['05 How It Works'],
       heading: 'Slide 5 · How it works',
-      body: `“So how does ${esc(d.programName)} actually work? Let me walk you through it step by step — this is the exact path.”`,
-      cue: 'Transition straight into the roadmap.'
+      body: `“But I’m sure you’re wondering: how does ${esc(d.programName)} work? How do we build the strategy, everything like that, right?”\n\n“Really quick — obviously you’ve seen some of my videos, what do you already know about ${esc(d.programName)}? I can kind of fill in the gaps from there.”\n\n“Exactly, you’re right! Once you’re on board, we’ll get all the information we need from you to build out a fully customized sales strategy and pitch, including a pitch deck and script, assessed, revised, and approved by myself. After approval from both myself and you, a handpicked closer will be assigned to your account, trained, tested, before their booking link goes live for your sales calls.”\n\n“The biggest thing with this is that it isn’t just the best sales opportunity, but it also represents freedom, because you’ll be gaining back so much time to invest in other areas of your business.”\n\n“This was huge for me because six months ago I was jumping on every single sales call myself. Now I’ll jump on one here or there, especially if it’s one I specifically value. But my girls cover most of them now, and that gives me so much more time to focus on the details of the strategy, build new features in our app, meet with investors — the things that actually elevate the business.”\n\n“The biggest thing I’d recommend thinking about when deciding who helps you scale is making sure you’re working with a company that has every bell and whistle checked and has thoroughly built out every strategy and tool to be successful. I’m sure you want to contract a company that already has all the kinks worked out, right? LOL”\n\n“Right! That’s why I’m so proud of what we’ve built here. And to give you a better idea of the timeline...”`,
+      cue: 'Let her answer both discovery questions before moving on.'
     },
     {
       slides: ['06 Roadmap'],
       heading: 'Slide 6 · The roadmap',
-      body: 'Walk each phase in order, pause after each one, and connect it to what they told you in discovery.',
-      cue: 'Commitment question: “Which phase are you most excited to master?”'
+      body: `“This is your 90-day roadmap. It’s more of a 70-day roadmap, depending on what works best for you, but we’re not just going to build you a pitch deck and throw your closer to the wolves. No — that’s what most sales agencies do, and that’s why they’ll never be us LOL.”\n\n“I have put every blood, sweat, and tear into this process, and excuse my French, but it’s a goddamn homerun! Weeks 1 through 3 are about perfecting the foundation of the sales strategy. Once approved and launched, your closer begins taking your sales calls, and from there we start mastering the process in weeks 4–6. We’ll utilize the data from our custom-built CRM app, assess if we need to enhance any part of the process, and begin weekly support calls. Once everything is dialed in, we begin monthly check-ins presenting the data, showing progress, and scaling your sales team as needed.”\n\n“But how do you feel about the process? Does it make you a little nervous? Does it make you excited? Tell me what’s going through your head.”\n\n“Yeah, that was me too setting up our own process. It’s always exciting/uncomfortable when you’re making big foundational changes like this. I’m sitting here telling you I know how to solve your problems, but the truth is I’m not the one closing your deals — and that’s the important part. When I decided it was time to hire closers to run our sales calls, I asked myself: how can I guarantee they’re properly trained, and hungry enough for success to carry the badge of resilience when it comes to closing deals? Well... only if I knew they were so devoted to perfecting their skill of high-ticket sales that they’d personally drop $10K to be trained by the greatest sales psycho of all time.”`,
+      cue: 'Let her answer, then reflect it back before transitioning to closer training.'
     },
     {
       slides: ['07 Closer Training'],
       heading: 'Slide 7 · Closer training',
-      body: `Every closer that works your leads goes through Shelby Sapp’s She Sells program before they ever touch a call — trained, tested, and certified. This is why you can trust the person representing your brand.`,
-      cue: 'This is a trust-builder — let it sit for a moment before moving on.'
+      body: `“Shelby Sapp herself — which I’m sure you’ve come across when doing your research on contracting remote closers, right? Yeah, she’s absolutely unreal. I’ve always been someone committed to continuing education, and after seeing so many of her reels that made me understand sales on a deeper level, I decided to actually go through the course myself. I KNEW it was going to be good, but I had no idea the level of genius I had just gained access to.”\n\n“That’s why when I started planning the scale of ${esc(d.programName)}, it was a no-brainer to hire closers who had learned the framework and psychology to become certified by the Harvard Law School of the sales academies. Not to mention we have access to all of the upgraded material, the community, and continuing education through seminars and meetups — so continuing education and evolution is a core value in the company. So you can guarantee our closers are nothing short of the best of the best! I’ve noted a few key points of knowledge that set us apart.”`,
+      cue: 'Read the certification highlights on the slide, then: “Obviously this is our bread and butter...”'
     },
     ...beforeBlocks,
     {
       slides: ['Software Showcase'],
       heading: 'Slide · Software showcase',
-      body: `“${esc(d.showcaseTitle)}” Walk the screen. “${esc(d.showcaseDesc)}”`,
-      cue: 'Say it once, pause. Don’t oversell — the screen does the work.'
+      body: `“I personally have been building out a pitch deck builder application and training our AI system to take the information gathered from onboarding and create a fully customized deck that strictly follows our sales call structure. As you can see, your information is inputted on the left in each section. The AI then utilizes your brand kit to create a presentable set of slides, pitching your offer to perfection. This takes days off of the process, letting us focus on the pitch script, and allowing your closer to be trained quicker and more efficiently. This isn’t some ChatGPT BS — this software is used by some of the biggest names in the game, like Google, Salesforce, and more.”`,
+      cue: 'Let this software be its own proof point — don’t rush it.'
     },
     ...afterBlocks,
     {
       slides: ['The Claim'],
       heading: 'Slide · The claim',
-      body: `“${esc(d.boldClaim)}”`,
-      cue: 'Say it like a fact, because it is. Then silence.'
+      body: `“${esc(d.programName)} produces the crème de la crème of sales strategies, PERIOD! It is LITERALLY not even close. But let me ask you — all this being said, do you see yourself reaching the point after the build out, your closers are trained, and we’re closing deal after deal, that you have more free time as a business owner, and actually get to scale your business instead of working tirelessly to close customers?”`,
+      cue: 'Let her answer. Then: “I see that for you! And it’s 100% in your future if you want it to be, right?”'
     },
     {
       slides: ['The Promise'],
       heading: 'Slide · The promise',
-      body: `“${esc(d.promiseTitle)}” ${esc(d.promise)}`,
-      cue: 'Drop the pitch voice entirely. Read this like you mean it — this is the emotional peak of the call.'
+      body: `“As an empath who loves words of affirmation, I wanted to add a little letter into this presentation for you. It says...”\n\n[Read the letter on the slide]\n\n“You can trust that my integrity is unshakeable when it comes to only allowing the best people on my team. This goes for clients as well. I can never promise success to someone who isn’t 10 toes down for their business. Just from our time on this call, I feel that you’re aligned with our values and match our energy, and I truly believe we could build a rock-solid partnership. But before I show you the packages — do you personally feel aligned with our core values and our drive, or is there anything you’re iffy on?”`,
+      cue: 'This is the emotional peak of the call. Slow down and mean it.'
     },
     {
       slides: ['The Bonus'],
       heading: 'Slide · The bonus',
-      body: `“And here’s the part nobody else can give you.” Frame ${esc(d.bonusName)} as the unfair advantage — the reason there is no comparison shopping. ${esc(d.bonusDesc)}`,
-      cue: ''
+      body: `“Awesome, I love it! And I agree, I think you’re going to be super excited to see the process, and you’re going to love the girls as well!”\n\n“I know that was a little more heartfelt, but are you ready to see the most revolutionary part of the whole offer?”\n\n“This is the CRM Software! My network is huge in the high-ticket closing space, so I inquired with some of the top closers in my circle about what would enhance their process when it comes to customer relationship management. I took all of their feedback, as well as my personal preferences from the top-name CRM platforms, and built out a proprietary software that not only collects the data, but tells you what to do with it to pivot and enhance where needed. I’ll show you what it looks like.”`,
+      cue: 'Let her answer before revealing the CRM.'
     },
     {
       slides: ['The Bonus (showcase)'],
       heading: 'Slide · The bonus, in action',
-      body: `Now show the screen: “${esc(d.bonusExpandedDesc)}”`,
+      body: `Walk the CRM software screen. Let it speak for itself — this is the “wow” moment of the call.`,
       cue: ''
     },
     {
       slides: ['Packages'],
       heading: 'Slide · Packages',
-      body: `“So here’s how you can start.” Present ${esc(d.pkg1Name)} at ${esc(d.pkg1Price)}, then ${esc(d.pkg2Name)} at ${esc(d.pkg2Price)}. Recommend the one that’s genuinely right for them — then stop talking.`,
-      cue: 'First one to speak loses.'
+      body: `“So on the left is the base ${esc(d.pkg1Name)} package. Includes... Signing up would be ${esc(d.pkg1Price)}.”\n\n“And if you’re wanting to go a step further with our ${esc(d.pkg2Name)} package — also getting a priority build out, 40 hours worth of closing per week, as well as daily support — then it’s ${esc(d.pkg2Price)}.”\n\n“But before we really dive into that...”`,
+      cue: 'Slight pause after each price. Let it land.'
     },
     {
       slides: ['Day One'],
       heading: 'Slide · The close',
-      body: `“${esc(d.closerLine)}” Pause. “So which is it for you?”`,
+      body: `“We’ve been doing this for a while now. We genuinely have the best sales strategy and build-out process, the #1 closing team, and full support from our closers and coaches — so there’s very high demand to join, which is why we often have waitlists for the agency. You applied at a good time!”\n\n“But I like to reward the women who are go-getters and have a deep sense of intrinsic motivation — nothing will stop them from being successful. I bring this up because you remind me of that type of woman. In order to sign these women as clients first, since there’s only so much work we can take on right now, I like to reward the women who make decisions and commit to them — so I offer discounts on the call! This is what the discounts look like...”`,
       cue: ''
     },
     {
       slides: ['Close Today'],
       heading: 'Slide · Close today pricing',
-      body: `If they’re ready to decide today, reveal the today-only pricing: ${esc(d.pkg1Today)} and ${esc(d.pkg2Today)}.`,
-      cue: 'Handle smokescreens, roll every objection back to their own reasons, and do not end the call without a decision — yes or no, never maybe.'
+      body: `“Just because beginning the onboarding is easier for both of us to get started on the call, I’m willing to take $500 off each package! I know you mentioned the priority build out is important to you, so I believe the ${esc(d.pkg2Name)} will be best — and on this call, you’d be getting all of the priority features for the price of the starter package.”\n\n“So we can get you started on onboarding today, begin building your profile, and schedule your weekly support calls so we’re immediately able to jump in and get the process rolling — giving you your free time back sooner so you can focus on what’s important. Literally right now, for just ${esc(d.pkg1Today)}.”`,
+      cue: 'Then stop talking. First one to speak loses.'
     }
   ];
 }
