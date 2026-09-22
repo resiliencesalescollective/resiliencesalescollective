@@ -149,7 +149,13 @@
     const channel = new BroadcastChannel('pitch-presenter-' + deckId);
 
     let current = null;
-    let history = [];
+
+    // Called directly by the main deck window (window.opener) whenever its
+    // slide changes — a same-origin function call, not a message, so it
+    // isn't subject to any background-tab delivery delay.
+    function receiveUpdate(msg) {
+      render(msg);
+    }
 
     function render(msg) {
       current = msg;
@@ -178,27 +184,16 @@
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
-    // Update this window immediately on click, instead of waiting on a
-    // round-trip broadcast back from the main window (which the main
-    // window's own advance still triggers, and will self-correct here
-    // once it arrives — this just removes the wait for the common case).
+    // Drive navigation by calling straight into the main deck window
+    // (same-origin, synchronous — reliable even while this window has
+    // focus and the main window is in the background). Falls back to
+    // BroadcastChannel only if the direct window reference isn't available.
     function goTo(dir) {
       if (!current) return;
-      channel.postMessage({ type: 'nav', dir });
-
-      if (dir === 'next' && current.nextLabel && current.index < current.total - 1) {
-        history.push(current);
-        render({
-          index: current.index + 1,
-          total: current.total,
-          slideLabel: current.nextLabel,
-          note: current.nextNote || '',
-          cue: '',
-          nextLabel: '',
-          nextNote: ''
-        });
-      } else if (dir === 'prev' && history.length) {
-        render(history.pop());
+      if (window.opener && !window.opener.closed && typeof window.opener.presenterNavigate === 'function') {
+        window.opener.presenterNavigate(dir);
+      } else {
+        channel.postMessage({ type: 'nav', dir });
       }
     }
 

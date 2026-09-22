@@ -653,8 +653,22 @@ function computeScript(d) {
   ];
 }
 
-// ─── Presenter notes window (broadcast) ────────────────────────
+// ─── Presenter notes window ─────────────────────────────────────
+// Primary sync path is a direct reference to the popup window (and its
+// reference back to us via window.opener) — this is a same-origin
+// synchronous call, not a pub/sub message, so it isn't subject to the
+// delivery delays BroadcastChannel can have for an unfocused/background
+// tab. BroadcastChannel is kept only as a fallback for edge cases where
+// the direct window reference isn't available.
+let presenterWin = null;
 let presenterChannel = null;
+
+function presenterNavigate(dir) {
+  const total = computeSlides().length;
+  if (dir === 'next') state.slideIndex = Math.min(state.slideIndex + 1, total - 1);
+  else if (dir === 'prev') state.slideIndex = Math.max(state.slideIndex - 1, 0);
+  render();
+}
 
 function getPresenterChannel() {
   if (presenterChannel || !state.recordId || typeof BroadcastChannel === 'undefined') return presenterChannel;
@@ -662,12 +676,7 @@ function getPresenterChannel() {
   presenterChannel.addEventListener('message', e => {
     if (!e.data) return;
     if (e.data.type === 'ready') broadcastPresenterNotes();
-    if (e.data.type === 'nav') {
-      const total = computeSlides().length;
-      if (e.data.dir === 'next') state.slideIndex = Math.min(state.slideIndex + 1, total - 1);
-      else if (e.data.dir === 'prev') state.slideIndex = Math.max(state.slideIndex - 1, 0);
-      render();
-    }
+    if (e.data.type === 'nav') presenterNavigate(e.data.dir);
   });
   return presenterChannel;
 }
@@ -678,13 +687,12 @@ function findScriptBlock(script, slideLabel) {
 
 function broadcastPresenterNotes() {
   const channel = getPresenterChannel();
-  if (!channel) return;
   const slides = computeSlides();
   const script = computeScript(state.data);
   const i = state.slideIndex;
   const current = slides[i] ? findScriptBlock(script, slides[i].label) : null;
   const next = slides[i + 1] ? findScriptBlock(script, slides[i + 1].label) : null;
-  channel.postMessage({
+  const msg = {
     type: 'update',
     index: i,
     total: slides.length,
@@ -693,7 +701,13 @@ function broadcastPresenterNotes() {
     cue: current ? current.cue : '',
     nextLabel: slides[i + 1] ? slides[i + 1].label : '',
     nextNote: next ? next.body : ''
-  });
+  };
+
+  if (presenterWin && !presenterWin.closed && typeof presenterWin.receiveUpdate === 'function') {
+    presenterWin.receiveUpdate(msg);
+  } else if (channel) {
+    channel.postMessage(msg);
+  }
 }
 
 // ─── Render ──────────────────────────────────────────────────
@@ -1153,12 +1167,12 @@ async function init() {
   // Presenter notes — opens a private notes window for the closer's own screen
   document.getElementById('presenterNotesBtn').addEventListener('click', () => {
     getPresenterChannel();
-    const win = window.open(
+    presenterWin = window.open(
       `presenter-notes.html?id=${state.recordId}`,
       'presenterNotes_' + state.recordId,
       'width=480,height=800,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
     );
-    if (win) win.focus();
+    if (presenterWin) presenterWin.focus();
     setTimeout(broadcastPresenterNotes, 400);
   });
 
