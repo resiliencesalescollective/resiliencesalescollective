@@ -7,6 +7,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="crm.css" />
+  <style>
+    #lostReasonSvg circle:hover { stroke-width: 26; }
+  </style>
 </head>
 <body>
 
@@ -137,6 +140,23 @@
               <tr><td colspan="4" class="loading">Loading…</td></tr>
             </tbody>
           </table>
+        </div>
+
+        <div class="section-header" style="margin-top:2rem;">
+          <h2 class="section-title" style="font-size:1.2rem;">Reasons Not Closing</h2>
+        </div>
+        <div id="lostReasonWrap" class="table-wrap" style="margin-bottom:3rem;padding:1.6rem;">
+          <div id="lostReasonEmpty" class="empty-state" style="display:none;">No lost-deal reasons logged yet. Set a reason on a client marked Closed Lost.</div>
+          <div id="lostReasonChart" style="display:none;align-items:center;gap:2.6rem;flex-wrap:wrap;">
+            <div style="position:relative;flex:none;">
+              <svg id="lostReasonSvg" width="180" height="180" viewBox="0 0 180 180"></svg>
+              <div id="lostReasonCenter" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;">
+                <div id="lostReasonTotal" style="font-family:var(--font-serif);font-size:2rem;color:var(--cream);line-height:1;"></div>
+                <div style="font-size:0.55rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--cream-55);margin-top:0.3rem;">Lost deals</div>
+              </div>
+            </div>
+            <div id="lostReasonLegend" style="display:flex;flex-direction:column;gap:0.9rem;flex:1;min-width:180px;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -350,7 +370,7 @@
 
     async function loadAnalytics() {
       const [{ data: clients }, { data: logs }] = await Promise.all([
-        db.from('clients').select('stage,call_booked,showed_up,lead_source,acquisition_cost,created_at,closed_at'),
+        db.from('clients').select('stage,call_booked,showed_up,lead_source,acquisition_cost,created_at,closed_at,lost_reason'),
         db.from('activity_logs').select('revenue,client_id')
       ]);
 
@@ -381,6 +401,8 @@
       document.getElementById('aTotalCAC').textContent    = formatCurrency(totalCAC);
       document.getElementById('aNetRev').textContent      = formatCurrency(netRev);
       document.getElementById('aRevPerLead').textContent  = formatCurrency(revPerLead);
+
+      renderLostReasons(all);
 
       // Revenue by lead source
       const sourceMap = {};
@@ -424,6 +446,66 @@
           </tr>`;
         }).join('');
       }
+    }
+
+    // Categorical order fixed: Price, Time, Spouse — validated for the CRM's
+    // dark surface (contrast + colorblind-safe separation), never reordered.
+    const LOST_REASON_COLORS = { Price: '#3987e5', Time: '#d95926', Spouse: '#199e70' };
+    const LOST_REASON_ORDER  = ['Price', 'Time', 'Spouse'];
+
+    function renderLostReasons(all) {
+      const lost = all.filter(c => c.stage === 'Closed Lost' && LOST_REASON_ORDER.includes(c.lost_reason));
+      const empty = document.getElementById('lostReasonEmpty');
+      const chart = document.getElementById('lostReasonChart');
+
+      if (!lost.length) {
+        empty.style.display = 'block';
+        chart.style.display = 'none';
+        return;
+      }
+      empty.style.display = 'none';
+      chart.style.display = 'flex';
+
+      const counts = {};
+      LOST_REASON_ORDER.forEach(r => counts[r] = 0);
+      lost.forEach(c => counts[c.lost_reason]++);
+      const total = lost.length;
+
+      // Donut via stroke-dasharray, one ring per reason, small surface gaps
+      // between segments, starting at 12 o'clock.
+      const r = 70, cx = 90, cy = 90, strokeWidth = 22, gap = 4;
+      const circumference = 2 * Math.PI * r;
+      let cumulative = 0;
+      const svg = document.getElementById('lostReasonSvg');
+      const segments = LOST_REASON_ORDER
+        .map(reason => ({ reason, count: counts[reason] }))
+        .filter(s => s.count > 0)
+        .map(s => {
+          const length = (s.count / total) * circumference;
+          const dash = Math.max(length - gap, 0);
+          const circle = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${LOST_REASON_COLORS[s.reason]}"
+            stroke-width="${strokeWidth}" stroke-linecap="round"
+            stroke-dasharray="${dash} ${circumference - dash}"
+            stroke-dashoffset="${-cumulative}"
+            transform="rotate(-90 ${cx} ${cy})" style="transition:stroke-width 0.15s;cursor:pointer;">
+            <title>${s.reason}: ${s.count} of ${total} (${Math.round(s.count / total * 100)}%)</title>
+          </circle>`;
+          cumulative += length;
+          return circle;
+        });
+      svg.innerHTML = segments.join('');
+      document.getElementById('lostReasonTotal').textContent = total;
+
+      document.getElementById('lostReasonLegend').innerHTML = LOST_REASON_ORDER.map(reason => {
+        const count = counts[reason];
+        const pct = Math.round(count / total * 100);
+        return `
+          <div style="display:flex;align-items:center;gap:0.7rem;">
+            <span style="width:11px;height:11px;border-radius:3px;background:${LOST_REASON_COLORS[reason]};flex:none;"></span>
+            <span style="font-size:0.82rem;color:var(--cream);flex:1;">${reason}</span>
+            <span style="font-size:0.82rem;color:var(--cream-55);">${count} · ${pct}%</span>
+          </div>`;
+      }).join('');
     }
 
     async function loadClosersTable() {

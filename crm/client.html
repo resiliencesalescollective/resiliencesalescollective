@@ -88,6 +88,17 @@
               Showed Up
             </label>
           </div>
+          <div class="form-row" id="lostReasonRow" style="display:none;margin-bottom:1.2rem;">
+            <div class="form-group">
+              <label>Reason Not Closing</label>
+              <select id="lostReason">
+                <option value="">— Select a reason —</option>
+                <option value="Price">Price</option>
+                <option value="Time">Time</option>
+                <option value="Spouse">Spouse</option>
+              </select>
+            </div>
+          </div>
           <div class="form-group">
             <label>Internal Notes</label>
             <textarea id="notesField" placeholder="Notes visible to you and the assigned closer…"></textarea>
@@ -204,6 +215,9 @@
         document.getElementById('acquisitionCost').value  = client.acquisition_cost || '';
         document.getElementById('callBooked').checked     = client.call_booked || false;
         document.getElementById('showedUp').checked       = client.showed_up || false;
+        document.getElementById('lostReason').value        = client.lost_reason || '';
+        toggleLostReason(client.stage);
+        document.getElementById('stageSelect').addEventListener('change', e => toggleLostReason(e.target.value));
 
         const { data: closers } = await db.from('profiles').select('id,full_name').eq('role','closer').order('full_name');
         const sel = document.getElementById('closerSelect');
@@ -230,6 +244,10 @@
       document.getElementById('pageContent').style.display = 'block';
 
       await loadActivity();
+    }
+
+    function toggleLostReason(stage) {
+      document.getElementById('lostReasonRow').style.display = stage === 'Closed Lost' ? 'flex' : 'none';
     }
 
     function setBadge(stage) {
@@ -277,9 +295,10 @@
       const call_booked     = document.getElementById('callBooked').checked;
       const showed_up       = document.getElementById('showedUp').checked;
       const closed_at       = stage === 'Closed Won' ? new Date().toISOString() : null;
+      const lost_reason     = stage === 'Closed Lost' ? document.getElementById('lostReason').value : '';
 
       const { error } = await db.from('clients')
-        .update({ stage, assigned_closer_id: closer, notes, lead_source, acquisition_cost, call_booked, showed_up, closed_at })
+        .update({ stage, assigned_closer_id: closer, notes, lead_source, acquisition_cost, call_booked, showed_up, closed_at, lost_reason })
         .eq('id', clientId);
 
       if (error) {
