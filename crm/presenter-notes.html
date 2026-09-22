@@ -167,7 +167,8 @@
 
     function render(msg) {
       current = msg;
-      document.getElementById('waiting').style.display = 'none';
+      const waitingEl = document.getElementById('waiting');
+      if (waitingEl) waitingEl.style.display = 'none';
       document.getElementById('nextBlock').style.display = 'block';
       document.getElementById('navRow').style.display = 'flex';
       document.getElementById('counter').textContent = (msg.index + 1) + ' / ' + msg.total;
