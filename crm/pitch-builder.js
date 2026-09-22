@@ -1016,7 +1016,7 @@ async function uploadImage(imageId, file) {
   state.data[urlKey] = publicUrl;
 
   const preview = document.getElementById(`${imageId}-preview`);
-  if (preview) preview.innerHTML = `<img src="${publicUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:7px;" alt="">`;
+  if (preview) preview.innerHTML = `<img src="${publicUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:7px;" alt="">`;
 
   const btn = document.getElementById(`${imageId}-upload-btn`);
   if (btn) btn.textContent = 'Change photo';
@@ -1038,7 +1038,7 @@ function buildFormHTML() {
         return `<label class="pb-field">
           <span class="pb-field-label">${f.label}</span>
           <div id="${f.imageId}-preview" class="pb-upload-preview">
-            ${url ? `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:7px;" alt="">` : '<span class="pb-upload-placeholder">No photo yet</span>'}
+            ${url ? `<img src="${url}" style="width:100%;height:100%;object-fit:contain;border-radius:7px;" alt="">` : '<span class="pb-upload-placeholder">No photo yet</span>'}
           </div>
           <input type="file" accept="image/*" id="${f.imageId}-file-input" style="display:none;">
           <button type="button" class="pb-upload-btn" id="${f.imageId}-upload-btn">${url ? 'Change photo' : 'Upload photo'}</button>
