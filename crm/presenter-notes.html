@@ -185,9 +185,9 @@
     // Called directly by the main window if it can reach us that way.
     function receiveUpdate(msg) { render(msg); }
 
-    function render(msg) {
+    function render(msg, force) {
       const changedSlide = !current || current.slideLabel !== msg.slideLabel;
-      const wasEditingSameSlide = editing && !changedSlide;
+      const wasEditingSameSlide = editing && !changedSlide && !force;
       current = msg;
       if (changedSlide) editing = false; // don't carry edit mode across slides
 
@@ -213,7 +213,7 @@
             <textarea class="edit-area" id="editCue" rows="2">${escapeHtml(msg.cue || '')}</textarea>
             <button class="edit-btn" id="doneEditBtn">Done editing</button>
           </div>`;
-        document.getElementById('doneEditBtn').addEventListener('click', () => { editing = false; render(current); });
+        document.getElementById('doneEditBtn').addEventListener('click', () => { editing = false; render(current, true); });
         document.getElementById('editNote').addEventListener('input', scheduleSaveOverride);
         document.getElementById('editCue').addEventListener('input', scheduleSaveOverride);
       } else {
@@ -224,7 +224,7 @@
             ${msg.cue ? `<div class="cue">${escapeHtml(msg.cue)}</div>` : ''}
             <button class="edit-btn" id="editBtn">✎ Edit these notes</button>
           </div>`;
-        document.getElementById('editBtn').addEventListener('click', () => { editing = true; render(current); });
+        document.getElementById('editBtn').addEventListener('click', () => { editing = true; render(current, true); });
       }
     }
 
