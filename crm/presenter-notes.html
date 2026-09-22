@@ -149,6 +149,7 @@
     const channel = new BroadcastChannel('pitch-presenter-' + deckId);
 
     let current = null;
+    let history = [];
 
     function render(msg) {
       current = msg;
@@ -177,9 +178,28 @@
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
+    // Update this window immediately on click, instead of waiting on a
+    // round-trip broadcast back from the main window (which the main
+    // window's own advance still triggers, and will self-correct here
+    // once it arrives — this just removes the wait for the common case).
     function goTo(dir) {
       if (!current) return;
       channel.postMessage({ type: 'nav', dir });
+
+      if (dir === 'next' && current.nextLabel && current.index < current.total - 1) {
+        history.push(current);
+        render({
+          index: current.index + 1,
+          total: current.total,
+          slideLabel: current.nextLabel,
+          note: current.nextNote || '',
+          cue: '',
+          nextLabel: '',
+          nextNote: ''
+        });
+      } else if (dir === 'prev' && history.length) {
+        render(history.pop());
+      }
     }
 
     document.getElementById('prevBtn').addEventListener('click', () => goTo('prev'));
