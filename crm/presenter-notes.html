@@ -178,13 +178,13 @@
       if (channel) { try { channel.postMessage(msg); } catch (err) {} }
       if (window.opener && !window.opener.closed) {
         try { window.opener.postMessage(msg, window.location.origin); } catch (err) {}
-        try { if (typeof window.opener.presenterNavigate === 'function' && msg.type === 'nav') window.opener.presenterNavigate(msg.dir); } catch (err) {}
+        try { if (typeof window.opener.handleNavMessage === 'function' && msg.type === 'nav') window.opener.handleNavMessage(msg); } catch (err) {}
       }
     }
 
     function goTo(dir) {
       if (!current) return;
-      send({ type: 'nav', dir });
+      send({ type: 'nav', dir, id: Date.now() + '-' + Math.random() });
     }
 
     document.getElementById('prevBtn').addEventListener('click', () => goTo('prev'));

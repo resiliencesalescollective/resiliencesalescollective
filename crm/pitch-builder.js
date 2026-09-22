@@ -662,12 +662,24 @@ function computeScript(d) {
 let presenterWin = null;
 let presenterChannel = null;
 let presenterListenerAttached = false;
+let lastNavId = null;
 
 function presenterNavigate(dir) {
   const total = computeSlides().length;
   if (dir === 'next') state.slideIndex = Math.min(state.slideIndex + 1, total - 1);
   else if (dir === 'prev') state.slideIndex = Math.max(state.slideIndex - 1, 0);
   render();
+}
+
+// Nav messages arrive redundantly over up to 3 channels (BroadcastChannel,
+// postMessage, and a direct call) so that one working channel is enough —
+// but that means the same click can arrive 2-3 times. Every message carries
+// an id; only the first delivery of a given id actually advances the slide.
+function handleNavMessage(data) {
+  if (!data || data.type !== 'nav') return;
+  if (data.id && data.id === lastNavId) return;
+  if (data.id) lastNavId = data.id;
+  presenterNavigate(data.dir);
 }
 
 function getPresenterChannel() {
@@ -677,7 +689,7 @@ function getPresenterChannel() {
     presenterChannel.addEventListener('message', e => {
       if (!e.data) return;
       if (e.data.type === 'ready') broadcastPresenterNotes();
-      if (e.data.type === 'nav') presenterNavigate(e.data.dir);
+      if (e.data.type === 'nav') handleNavMessage(e.data);
     });
   } catch (err) { /* BroadcastChannel unavailable — other channels still work */ }
   return presenterChannel;
@@ -690,7 +702,7 @@ function ensurePresenterListener() {
   window.addEventListener('message', e => {
     if (e.origin !== window.location.origin || !e.data) return;
     if (e.data.type === 'ready') broadcastPresenterNotes();
-    if (e.data.type === 'nav') presenterNavigate(e.data.dir);
+    if (e.data.type === 'nav') handleNavMessage(e.data);
   });
 }
 
