@@ -140,12 +140,13 @@
     </div>
   </section>
 
-  <!-- APPLY -->
+  <!-- APPLY (temporarily showing a waitlist form — see git history for the
+       full application form to restore later) -->
   <section class="section apply-section" id="apply">
     <div class="container center">
-      <p class="label">Ready?</p>
-      <h2>Let's talk<br /><strong>business.</strong></h2>
-      <p class="body-text apply-sub">Apply below and we'll be in touch<br />within 24 hours.</p>
+      <p class="label">We're at capacity</p>
+      <h2>Join the<br /><strong>waitlist.</strong></h2>
+      <p class="body-text apply-sub">Drop your info below and we'll reach out<br />the moment a spot opens up.</p>
       <form class="apply-form" id="applyForm">
         <div class="form-row">
           <div class="form-group">
@@ -158,42 +159,14 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="business">Business Name</label>
-          <input type="text" id="business" name="business_name" placeholder="Your business name" required />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" placeholder="your@email.com" required />
-          </div>
-          <div class="form-group">
-            <label for="phone">Phone Number</label>
-            <input type="tel" id="phone" name="phone" placeholder="+1 (000) 000-0000" required />
-          </div>
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="your@email.com" required />
         </div>
         <div class="form-group">
           <label for="instagram">Instagram Handle</label>
-          <input type="text" id="instagram" name="instagram" placeholder="@yourhandle" required />
+          <input type="text" id="instagram" name="instagram" placeholder="@yourhandle" />
         </div>
-        <div class="form-group">
-          <label for="program">What type of course/program do you have?</label>
-          <input type="text" id="program" name="program_type" placeholder="e.g. coaching, online course, mastermind..." required />
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="leads">Leads Per Month</label>
-            <input type="text" id="leads" name="leads_per_month" placeholder="e.g. 300+" required />
-          </div>
-          <div class="form-group">
-            <label for="revenue">Monthly Revenue</label>
-            <input type="text" id="revenue" name="monthly_revenue" placeholder="e.g. $10,000+" required />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="why">Why do you want to work with Resilience Sales Collective?</label>
-          <textarea id="why" name="why_rsc" placeholder="Tell us a little about where you're at and what you're looking for..." required></textarea>
-        </div>
-        <button type="submit" class="btn-primary">Submit Application</button>
+        <button type="submit" class="btn-primary">Join the Waitlist</button>
       </form>
     </div>
   </section>
@@ -224,6 +197,7 @@
 
       const form = new FormData(e.target);
       const data = Object.fromEntries(form.entries());
+      data.notes = 'Waitlist signup';
 
       // Save to CRM
       await db.from('clients').insert([data]);
