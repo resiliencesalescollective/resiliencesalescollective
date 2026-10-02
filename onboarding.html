@@ -319,7 +319,7 @@
         document.getElementById('doneWrap').style.display = 'block';
       } catch (err) {
         status.className = 'status-msg error-msg';
-        status.textContent = 'Something went wrong submitting this — please try again, or reach out to us directly.';
+        status.textContent = 'Something went wrong: ' + (err && err.message ? err.message : String(err));
         btn.disabled = false;
         btn.textContent = 'Submit';
       }
