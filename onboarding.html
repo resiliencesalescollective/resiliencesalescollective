@@ -163,9 +163,38 @@
 
     const values = {};
     const files = {}; // imageId -> File
+    let templateData = null;
+
+    // camelCase form key → snake_case database column, for pulling example
+    // text from the admin's template deck.
+    const FIELD_TO_COLUMN = {
+      programName: 'program_name', category: 'category', movement: 'movement',
+      proofPoints: 'proof_points',
+      founderName: 'founder_name', founderStory: 'founder_story', founderPhotoUrl: 'founder_photo_url',
+      roadmapTitle: 'roadmap_title',
+      p1Weeks: 'p1_weeks', p1Title: 'p1_title', p1Skills: 'p1_skills', p1Checks: 'p1_checks',
+      p2Weeks: 'p2_weeks', p2Title: 'p2_title', p2Skills: 'p2_skills', p2Checks: 'p2_checks',
+      p3Weeks: 'p3_weeks', p3Title: 'p3_title', p3Skills: 'p3_skills', p3Checks: 'p3_checks',
+      closerTrainingTitle: 'closer_training_title', closerTrainingIntro: 'closer_training_intro',
+      closerTrainingPoints: 'closer_training_points', closerTrainingPhotoUrl: 'closer_training_photo_url',
+      platformName: 'platform_name',
+      feature1: 'feature1', feature2: 'feature2', feature3: 'feature3', feature4: 'feature4', feature5: 'feature5', feature6: 'feature6',
+      showcaseTitle: 'showcase_title', showcaseDesc: 'showcase_desc', showcaseImageUrl: 'showcase_image_url',
+      boldClaim: 'bold_claim', promiseTitle: 'promise_title', promise: 'promise',
+      bonusName: 'bonus_name', bonusDesc: 'bonus_desc', bonusExpandedDesc: 'bonus_expanded_desc',
+      bonusPhotoUrl: 'bonus_photo_url', bonusPhotoUrl2: 'bonus_photo_url_2',
+      pkg1Name: 'pkg1_name', pkg1Features: 'pkg1_features', pkg1Price: 'pkg1_price', pkg1Today: 'pkg1_today',
+      pkg2Name: 'pkg2_name', pkg2Features: 'pkg2_features', pkg2Price: 'pkg2_price', pkg2Today: 'pkg2_today',
+      closerLine: 'closer_line'
+    };
 
     function esc(s) {
       return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function exampleFor(key) {
+      if (!templateData) return '';
+      return templateData[FIELD_TO_COLUMN[key]] || '';
     }
 
     function buildSections() {
@@ -176,8 +205,10 @@
           <div class="section-body">
             ${sec.fields.map(f => {
               if (f.type === 'image') {
+                const exampleUrl = exampleFor(f.key);
                 return `<div class="field">
                   <span class="field-label">${esc(f.label)}</span>
+                  ${exampleUrl ? `<span class="field-hint">Example from a past deck:</span><div class="upload-preview" style="margin-bottom:10px;"><img src="${esc(exampleUrl)}" alt=""></div>` : ''}
                   <div class="upload-preview" id="${f.imageId}-preview"><span>No photo yet</span></div>
                   <input type="file" accept="image/*" class="field-file" data-image-id="${f.imageId}">
                 </div>`;
@@ -186,13 +217,13 @@
                 return `<div class="field">
                   <span class="field-label">${esc(f.label)}</span>
                   ${f.hint ? `<span class="field-hint">${esc(f.hint)}</span>` : ''}
-                  <textarea class="field-textarea" data-key="${f.key}" rows="${f.rows || 3}"></textarea>
+                  <textarea class="field-textarea" data-key="${f.key}" rows="${f.rows || 3}" placeholder="${esc(exampleFor(f.key))}"></textarea>
                 </div>`;
               }
               return `<div class="field">
                 <span class="field-label">${esc(f.label)}</span>
                 ${f.hint ? `<span class="field-hint">${esc(f.hint)}</span>` : ''}
-                <input type="text" class="field-input" data-key="${f.key}">
+                <input type="text" class="field-input" data-key="${f.key}" placeholder="${esc(exampleFor(f.key))}">
               </div>`;
             }).join('')}
           </div>
@@ -249,14 +280,8 @@
           values[IMAGE_FIELD_KEYS[imageId]] = url;
         }
 
-        // Pull brand colors/fonts from the admin's template deck, if one is set
         status.textContent = 'Creating your pitch deck…';
-        const { data: template } = await db
-          .from('pitch_decks')
-          .select('brand_dark, brand_light, brand_accent, heading_font, accent_font')
-          .eq('is_template', true)
-          .limit(1)
-          .maybeSingle();
+        const template = templateData;
 
         const payload = {
           client_name: values.programName || values.founderName || 'Untitled Pitch',
@@ -300,7 +325,18 @@
       }
     });
 
-    buildSections();
+    async function init() {
+      const { data } = await db
+        .from('pitch_decks')
+        .select('*')
+        .eq('is_template', true)
+        .limit(1)
+        .maybeSingle();
+      templateData = data || null;
+      buildSections();
+    }
+
+    init();
   </script>
 </body>
 </html>
