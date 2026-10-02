@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resilience Sales Collective — Onboarding</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Archivo, sans-serif;
+      background: #14100E;
+      color: #F3EDE3;
+      min-height: 100vh;
+      padding: 60px 20px 120px;
+    }
+    .wrap { max-width: 680px; margin: 0 auto; }
+    .brand { font-family: 'Instrument Serif', serif; font-style: italic; font-size: 26px; color: #F3EDE3; margin-bottom: 6px; }
+    .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: #A08256; margin-bottom: 34px; }
+    h1 { font-size: 32px; font-weight: 900; text-transform: uppercase; line-height: 1.15; margin-bottom: 14px; }
+    .intro { font-size: 15px; line-height: 1.6; color: #A79C90; margin-bottom: 44px; }
+    .section { margin-bottom: 10px; background: #1B1714; border: 1px solid #2C2620; border-radius: 12px; overflow: hidden; }
+    .section summary {
+      cursor: pointer; padding: 16px 20px; list-style: none;
+      display: flex; align-items: center; gap: 10px; user-select: none;
+    }
+    .section summary::-webkit-details-marker, .section summary::marker { display: none; }
+    .section-num { color: #A08256; font-family: 'Instrument Serif', serif; font-style: italic; font-size: 17px; }
+    .section-title { font-size: 13px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+    .section-body { padding: 4px 20px 20px; display: flex; flex-direction: column; gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field-label { font-size: 13px; font-weight: 700; color: #F3EDE3; line-height: 1.4; }
+    .field-hint { font-size: 12px; color: #6E655C; line-height: 1.4; }
+    .field-input, .field-textarea {
+      font: 500 14px Archivo, sans-serif; color: #F3EDE3; background: #14100E;
+      border: 1px solid #3A342F; border-radius: 7px; padding: 11px 13px; outline: none; width: 100%;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus, .field-textarea:focus { border-color: #A08256; }
+    .field-textarea { line-height: 1.5; resize: vertical; }
+    .field-file { font-size: 13px; color: #A79C90; }
+    .upload-preview { width: 140px; height: 100px; background: #14100E; border: 1px solid #3A342F; border-radius: 7px; display: flex; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 6px; }
+    .upload-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .upload-preview span { font-size: 11px; color: #6E655C; }
+    .submit-bar { position: sticky; bottom: 0; background: #14100E; padding: 20px 0 0; margin-top: 30px; }
+    .submit-btn {
+      width: 100%; font: 700 13px Archivo, sans-serif; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #14100E; background: #A08256; border: none; border-radius: 8px; padding: 16px 0; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .submit-btn:hover { background: #7E663F; }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status-msg { text-align: center; font-size: 13px; margin-top: 12px; color: #A79C90; }
+    .error-msg { color: #c0392b; }
+    .done-wrap { max-width: 520px; margin: 120px auto; text-align: center; }
+    .done-wrap h1 { font-size: 30px; margin-bottom: 16px; }
+    .done-wrap p { font-size: 15px; line-height: 1.6; color: #A79C90; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="formWrap">
+    <div class="brand">RSC</div>
+    <div class="tag">Client Onboarding</div>
+    <h1>Let's build your pitch deck</h1>
+    <p class="intro">Answer the questions below in as much detail as you can — the more specific, the better your deck and sales script will be. Everything here is editable later, so don't stress about getting it perfect.</p>
+    <form id="onboardingForm">
+      <div id="sectionsHost"></div>
+      <div class="submit-bar">
+        <button type="submit" class="submit-btn" id="submitBtn">Submit</button>
+        <div class="status-msg" id="statusMsg"></div>
+      </div>
+    </form>
+  </div>
+
+  <div class="done-wrap" id="doneWrap" style="display:none;">
+    <div class="brand">RSC</div>
+    <h1>You're all set!</h1>
+    <p>Thanks for filling that out — we're building your pitch deck now and will be in touch soon.</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://efoiwtvtfnbwspesrekp.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Qlh9UyJBOb-KVwBPf6Aocg_onp_WBEL';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const clientId = new URLSearchParams(window.location.search).get('client') || null;
+
+    const SECTIONS = [
+      { num: '01', title: 'Your program', fields: [
+        { key: 'programName', label: "What's the name of your program or offer?", type: 'input' },
+        { key: 'category', label: 'Finish this sentence for us:', hint: '"[Your program] is more than just ___" — this becomes the opening hook of your deck.', type: 'textarea', rows: 2 },
+        { key: 'movement', label: "What's the bigger mission or movement behind what you do?", type: 'textarea', rows: 2 }
+      ]},
+      { num: '02', title: 'The proof', fields: [
+        { key: 'proofPoints', label: 'Give us a few stats or proof points about your business', hint: 'One per line — e.g. number of clients, revenue generated, years in business.', type: 'textarea', rows: 4 }
+      ]},
+      { num: '03', title: 'About you', fields: [
+        { key: 'founderName', label: 'Your name', type: 'input' },
+        { key: 'founderStory', label: 'Tell us your story in 3 short beats', hint: 'One per line — where you started, what you built, why you built it.', type: 'textarea', rows: 5 },
+        { key: 'founderPhotoUrl', label: 'Upload a photo of yourself', type: 'image', imageId: 'founder' }
+      ]},
+      { num: '04', title: 'Your process', fields: [
+        { key: 'roadmapTitle', label: 'What do you call your process or roadmap?', hint: 'e.g. "Your 90-Day Roadmap"', type: 'input' },
+        { key: 'p1Weeks', label: 'Phase 1 — timeframe', hint: 'e.g. "Weeks 1–3"', type: 'input' },
+        { key: 'p1Title', label: 'Phase 1 — title', type: 'input' },
+        { key: 'p1Skills', label: 'Phase 1 — what they learn/do (one per line)', type: 'textarea', rows: 3 },
+        { key: 'p1Checks', label: 'Phase 1 — milestones/checkpoints (one per line)', type: 'textarea', rows: 2 },
+        { key: 'p2Weeks', label: 'Phase 2 — timeframe', type: 'input' },
+        { key: 'p2Title', label: 'Phase 2 — title', type: 'input' },
+        { key: 'p2Skills', label: 'Phase 2 — what they learn/do (one per line)', type: 'textarea', rows: 3 },
+        { key: 'p2Checks', label: 'Phase 2 — milestones/checkpoints (one per line)', type: 'textarea', rows: 2 },
+        { key: 'p3Weeks', label: 'Phase 3 — timeframe', type: 'input' },
+        { key: 'p3Title', label: 'Phase 3 — title', type: 'input' },
+        { key: 'p3Skills', label: 'Phase 3 — what they learn/do (one per line)', type: 'textarea', rows: 3 },
+        { key: 'p3Checks', label: 'Phase 3 — milestones/checkpoints (one per line)', type: 'textarea', rows: 2 }
+      ]},
+      { num: '05', title: 'Your team', fields: [
+        { key: 'closerTrainingTitle', label: 'Headline about how your team is trained or certified', type: 'input' },
+        { key: 'closerTrainingIntro', label: 'A sentence or two on that training/certification', type: 'textarea', rows: 3 },
+        { key: 'closerTrainingPoints', label: 'List 2–3 highlights of that training (one per line)', type: 'textarea', rows: 3 },
+        { key: 'closerTrainingPhotoUrl', label: 'Optional photo for this slide', type: 'image', imageId: 'closerTraining' }
+      ]},
+      { num: '06', title: "What's included", fields: [
+        { key: 'platformName', label: "What's the name of your platform, system, or core offer?", type: 'input' },
+        { key: 'feature1', label: 'Feature / deliverable 1', type: 'input' },
+        { key: 'feature2', label: 'Feature / deliverable 2', type: 'input' },
+        { key: 'feature3', label: 'Feature / deliverable 3', type: 'input' },
+        { key: 'feature4', label: 'Feature / deliverable 4', type: 'input' },
+        { key: 'feature5', label: 'Feature / deliverable 5', type: 'input' },
+        { key: 'feature6', label: 'Feature / deliverable 6 — your biggest one, saved for last', type: 'input' }
+      ]},
+      { num: '07', title: 'Software or platform (if you have one)', fields: [
+        { key: 'showcaseTitle', label: 'A line introducing your software/platform', type: 'textarea', rows: 2 },
+        { key: 'showcaseDesc', label: 'Describe what it does and why it matters', type: 'textarea', rows: 3 },
+        { key: 'showcaseImageUrl', label: 'Upload a screenshot', type: 'image', imageId: 'showcase' }
+      ]},
+      { num: '08', title: 'Your claim & promise', fields: [
+        { key: 'boldClaim', label: 'What is the boldest claim you can make about your results?', type: 'textarea', rows: 2 },
+        { key: 'promiseTitle', label: 'Promise headline', hint: 'e.g. "My promise to you is…"', type: 'input' },
+        { key: 'promise', label: 'Your promise to clients (one paragraph per line)', type: 'textarea', rows: 4 }
+      ]},
+      { num: '09', title: 'Bonus', fields: [
+        { key: 'bonusName', label: 'Name of a bonus asset you offer', type: 'input' },
+        { key: 'bonusDesc', label: 'What it does for them — short version', type: 'textarea', rows: 3 },
+        { key: 'bonusExpandedDesc', label: 'What it does for them — fuller version', type: 'textarea', rows: 3 },
+        { key: 'bonusPhotoUrl', label: 'Screenshot — top', type: 'image', imageId: 'bonus' },
+        { key: 'bonusPhotoUrl2', label: 'Screenshot — bottom', type: 'image', imageId: 'bonus2' }
+      ]},
+      { num: '10', title: 'Packages & pricing', fields: [
+        { key: 'pkg1Name', label: 'Package 1 — name', type: 'input' },
+        { key: 'pkg1Features', label: 'Package 1 — what’s included (one per line)', type: 'textarea', rows: 4 },
+        { key: 'pkg1Price', label: 'Package 1 — regular price', type: 'input' },
+        { key: 'pkg1Today', label: 'Package 1 — today-only / discounted price', type: 'input' },
+        { key: 'pkg2Name', label: 'Package 2 — name', type: 'input' },
+        { key: 'pkg2Features', label: 'Package 2 — what’s included (one per line)', type: 'textarea', rows: 4 },
+        { key: 'pkg2Price', label: 'Package 2 — regular price', type: 'input' },
+        { key: 'pkg2Today', label: 'Package 2 — today-only / discounted price', type: 'input' },
+        { key: 'closerLine', label: 'A closing line or tagline for your business', type: 'input' }
+      ]}
+    ];
+
+    const values = {};
+    const files = {}; // imageId -> File
+
+    function esc(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function buildSections() {
+      const host = document.getElementById('sectionsHost');
+      host.innerHTML = SECTIONS.map((sec, si) => `
+        <details class="section" ${si === 0 ? 'open' : ''}>
+          <summary><span class="section-num">${sec.num}</span><span class="section-title">${esc(sec.title)}</span></summary>
+          <div class="section-body">
+            ${sec.fields.map(f => {
+              if (f.type === 'image') {
+                return `<div class="field">
+                  <span class="field-label">${esc(f.label)}</span>
+                  <div class="upload-preview" id="${f.imageId}-preview"><span>No photo yet</span></div>
+                  <input type="file" accept="image/*" class="field-file" data-image-id="${f.imageId}">
+                </div>`;
+              }
+              if (f.type === 'textarea') {
+                return `<div class="field">
+                  <span class="field-label">${esc(f.label)}</span>
+                  ${f.hint ? `<span class="field-hint">${esc(f.hint)}</span>` : ''}
+                  <textarea class="field-textarea" data-key="${f.key}" rows="${f.rows || 3}"></textarea>
+                </div>`;
+              }
+              return `<div class="field">
+                <span class="field-label">${esc(f.label)}</span>
+                ${f.hint ? `<span class="field-hint">${esc(f.hint)}</span>` : ''}
+                <input type="text" class="field-input" data-key="${f.key}">
+              </div>`;
+            }).join('')}
+          </div>
+        </details>`).join('');
+
+      host.querySelectorAll('[data-key]').forEach(el => {
+        el.addEventListener('input', e => { values[e.target.dataset.key] = e.target.value; });
+      });
+      host.querySelectorAll('[data-image-id]').forEach(el => {
+        el.addEventListener('change', e => {
+          const imageId = e.target.dataset.imageId;
+          const file = e.target.files[0];
+          if (!file) return;
+          files[imageId] = file;
+          const preview = document.getElementById(`${imageId}-preview`);
+          const reader = new FileReader();
+          reader.onload = ev => { preview.innerHTML = `<img src="${ev.target.result}" alt="">`; };
+          reader.readAsDataURL(file);
+        });
+      });
+    }
+
+    async function uploadImage(imageId, file) {
+      const ext = file.name.split('.').pop();
+      const path = `onboarding/${clientId || 'anon'}/${imageId}-${Date.now()}.${ext}`;
+      const { error } = await db.storage.from('pitch-deck-images').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: { publicUrl } } = db.storage.from('pitch-deck-images').getPublicUrl(path);
+      return publicUrl;
+    }
+
+    const IMAGE_FIELD_KEYS = {
+      founder: 'founderPhotoUrl',
+      closerTraining: 'closerTrainingPhotoUrl',
+      showcase: 'showcaseImageUrl',
+      bonus: 'bonusPhotoUrl',
+      bonus2: 'bonusPhotoUrl2'
+    };
+
+    document.getElementById('onboardingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const status = document.getElementById('statusMsg');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      status.className = 'status-msg';
+      status.textContent = '';
+
+      try {
+        // Upload any selected photos first
+        for (const imageId of Object.keys(files)) {
+          status.textContent = 'Uploading photos…';
+          const url = await uploadImage(imageId, files[imageId]);
+          values[IMAGE_FIELD_KEYS[imageId]] = url;
+        }
+
+        // Pull brand colors/fonts from the admin's template deck, if one is set
+        status.textContent = 'Creating your pitch deck…';
+        const { data: template } = await db
+          .from('pitch_decks')
+          .select('brand_dark, brand_light, brand_accent, heading_font, accent_font')
+          .eq('is_template', true)
+          .limit(1)
+          .maybeSingle();
+
+        const payload = {
+          client_name: values.programName || values.founderName || 'Untitled Pitch',
+          client_id: clientId,
+          brand_dark: template ? template.brand_dark : '#14100E',
+          brand_light: template ? template.brand_light : '#F3EDE3',
+          brand_accent: template ? template.brand_accent : '#A08256',
+          heading_font: template ? template.heading_font : 'archivo',
+          accent_font: template ? template.accent_font : 'instrumentserif',
+          program_name: values.programName || '', category: values.category || '', movement: values.movement || '',
+          proof_points: values.proofPoints || '',
+          founder_name: values.founderName || '', founder_story: values.founderStory || '', founder_photo_url: values.founderPhotoUrl || '',
+          roadmap_title: values.roadmapTitle || '',
+          p1_weeks: values.p1Weeks || '', p1_title: values.p1Title || '', p1_skills: values.p1Skills || '', p1_checks: values.p1Checks || '',
+          p2_weeks: values.p2Weeks || '', p2_title: values.p2Title || '', p2_skills: values.p2Skills || '', p2_checks: values.p2Checks || '',
+          p3_weeks: values.p3Weeks || '', p3_title: values.p3Title || '', p3_skills: values.p3Skills || '', p3_checks: values.p3Checks || '',
+          closer_training_title: values.closerTrainingTitle || '', closer_training_intro: values.closerTrainingIntro || '',
+          closer_training_points: values.closerTrainingPoints || '', closer_training_photo_url: values.closerTrainingPhotoUrl || '',
+          platform_name: values.platformName || '',
+          feature1: values.feature1 || '', feature2: values.feature2 || '', feature3: values.feature3 || '',
+          feature4: values.feature4 || '', feature5: values.feature5 || '', feature6: values.feature6 || '',
+          showcase_title: values.showcaseTitle || '', showcase_desc: values.showcaseDesc || '', showcase_image_url: values.showcaseImageUrl || '',
+          bold_claim: values.boldClaim || '', promise_title: values.promiseTitle || '', promise: values.promise || '',
+          bonus_name: values.bonusName || '', bonus_desc: values.bonusDesc || '', bonus_expanded_desc: values.bonusExpandedDesc || '',
+          bonus_photo_url: values.bonusPhotoUrl || '', bonus_photo_url_2: values.bonusPhotoUrl2 || '',
+          pkg1_name: values.pkg1Name || '', pkg1_features: values.pkg1Features || '', pkg1_price: values.pkg1Price || '', pkg1_today: values.pkg1Today || '',
+          pkg2_name: values.pkg2Name || '', pkg2_features: values.pkg2Features || '', pkg2_price: values.pkg2Price || '', pkg2_today: values.pkg2Today || '',
+          closer_line: values.closerLine || ''
+        };
+
+        const { error } = await db.from('pitch_decks').insert([payload]);
+        if (error) throw error;
+
+        document.getElementById('formWrap').style.display = 'none';
+        document.getElementById('doneWrap').style.display = 'block';
+      } catch (err) {
+        status.className = 'status-msg error-msg';
+        status.textContent = 'Something went wrong submitting this — please try again, or reach out to us directly.';
+        btn.disabled = false;
+        btn.textContent = 'Submit';
+      }
+    });
+
+    buildSections();
+  </script>
+</body>
+</html>
