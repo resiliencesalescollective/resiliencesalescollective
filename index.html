@@ -209,6 +209,25 @@
         body: form
       });
 
+      // Also sync to Kit (ConvertKit). This runs server-side (see
+      // functions/api/waitlist.js) so the Kit API key never has to live in
+      // this page's JavaScript. A Kit failure here must never block the
+      // sign-up or the redirect — it already saved to the CRM above.
+      try {
+        await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            instagram: data.instagram
+          })
+        });
+      } catch (err) {
+        // Non-fatal — intentionally swallowed.
+      }
+
       window.location.href = 'thank-you.html';
     });
   </script>
